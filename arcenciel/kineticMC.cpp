@@ -332,8 +332,7 @@ void KineticMC::loadParticle(){
 	random = (unsigned long)
 	  (getRandomNumber()*siteVector.size());
 	if(siteVector[random].getState()==Site::UNOCCUPY){
-	  particleVector.push_back(siteVector[random].getNum());
-	  siteVector[random].setState(Site::OCCUPY);
+	  addParticle(siteVector[random].getNum());
 	}else{
 	  j--;
 	}
@@ -349,8 +348,7 @@ void KineticMC::loadParticle(){
 		   &site[5],&site[6],&site[7],&site[8],&site[9]);
       for(i=0; i<num; i++){
 	if(siteVector[site[i]].getState()==Site::UNOCCUPY){
-	  particleVector.push_back(siteVector[site[i]].getNum());
-	  siteVector[site[i]].setState(Site::OCCUPY);
+	  addParticle(siteVector[site[i]].getNum());
 	}else{
 	  char error[LINE];
 	  sprintf(error,"Site[%lu] is already occupied!",site[i]); 
@@ -410,8 +408,7 @@ void KineticMC::keepNumParticleRandomConst(const char *line){
 
     if(siteVector[random].getSiteType()==siteType &&
 	siteVector[random].getState()==Site::UNOCCUPY){
-      particleVector.push_back(siteVector[random].getNum());
-      siteVector[random].setState(Site::OCCUPY);
+      addParticle(siteVector[random].getNum());
     }else{
       i--;
     }
@@ -641,8 +638,10 @@ void KineticMC::changeNumParticle(int step){
 
   vector<KeepNumParticleConst>::iterator iter;
   iter = keepNumParticleConstVector.begin();
+
   while(iter != keepNumParticleConstVector.end()){
 
+    /* 出力ステップを判断 */
     if(step % iter->getInterval() == 0){
       unsigned long occupiedNum=0;
       vectorPointer = iter->getSiteVector();
@@ -651,25 +650,27 @@ void KineticMC::changeNumParticle(int step){
       while(site != vectorPointer->end()){
 	if(siteVector[*site].getState()==Site::OCCUPY){
 	  occupiedNum++;
+	  /* 占有サイトの保存 */
 	  occupiedSitesVector.push_back(*site);
 	}else{
+	  /* 非占有サイトの保存 */
 	  unoccupiedSitesVector.push_back(*site);
 	}
 	site++;
       }
-      cout << "%%" <<occupiedNum << endl;
       unsigned long random;
       unsigned long siteNum;
       long i;
+
+      /* 粒子数の設定値との差を計算 */
       long numAddParticle = iter->getNumParticle()-occupiedNum;
-      cout << numAddParticle << endl;
+
       if(numAddParticle>0){          /* 粒子数が増加する場合 */
   	for(i=0;i<numAddParticle;i++){
 	  random = (unsigned long)
 	    (getRandomNumber()*unoccupiedSitesVector.size());
 	  siteNum = unoccupiedSitesVector[random];
-	  particleVector.push_back(siteVector[siteNum].getNum());
-	  siteVector[siteNum].setState(Site::OCCUPY);
+	  addParticle(siteNum);
 	  unoccupiedSitesVector
 	    .erase(unoccupiedSitesVector.begin()+random);
 	} 
@@ -678,12 +679,11 @@ void KineticMC::changeNumParticle(int step){
 	  random = (unsigned long)
 	    (getRandomNumber()*occupiedSitesVector.size());
 	  siteNum = occupiedSitesVector[random];
-	  siteVector[siteNum].setState(Site::UNOCCUPY);
 	  
 	  vector<Particle>::size_type num;
 	  for(num=0;num<particleVector.size();num++){
 	    if(particleVector[num].getSite() == siteNum){
-	      particleVector.erase(particleVector.begin()+num);
+	      deleteParticle(num);
 	      break;
 	    }
 	  }
@@ -696,7 +696,6 @@ void KineticMC::changeNumParticle(int step){
     }
     iter++;
   }
-
 }
 
 /*-----------------------------------------------*/
@@ -938,14 +937,6 @@ void  KineticMC::loadCoordination( const char *line){
 }
 
 /*-----------------------------------------------*/
-/*         隣接サイトの追加                      */
-/*-----------------------------------------------*/
-void  KineticMC::addSiteNeighbor(Site *site, Site *neighbor){
-
-
-}
-
-/*-----------------------------------------------*/
 /*         path(siteのペア)の読み込み            */
 /*-----------------------------------------------*/
 void  KineticMC::loadPair( const char *line){
@@ -975,6 +966,34 @@ void  KineticMC::loadPair( const char *line){
   }
 }
 
+/*-----------------------------------------------*/
+/*         粒子の追加                            */
+/*-----------------------------------------------*/
+void KineticMC::addParticle(unsigned long site){
+  particleVector.push_back(siteVector[site].getNum());
+  siteVector[site].setState(Site::OCCUPY);
+}
+
+
+/*-----------------------------------------------*/
+/*         粒子の削除                            */
+/*-----------------------------------------------*/
+void KineticMC::deleteParticle(vector<Particle>::size_type particle){
+  siteVector[particleVector[particle].getSite()]
+    .setState(Site::UNOCCUPY);
+  particleVector.erase(particleVector.begin()+particle);
+}
+
+/*-----------------------------------------------*/
+/*         粒子の移動                            */
+/*-----------------------------------------------*/
+void KineticMC::moveParticle(vector<Particle>::size_type particle,
+			     unsigned long nextSite){
+  siteVector[particleVector[particle].getSite()]
+    .setState(Site::UNOCCUPY);
+  siteVector[nextSite].setState(Site::OCCUPY);
+  particleVector[particle].setSite(nextSite);
+}
 
 /*-----------------------------------------------*/
 /*         site typeの追加                       */
@@ -1092,82 +1111,52 @@ int KineticMC::getRealNumNeighbor(int site){
 void KineticMC::eventOccur(vector<Event>::size_type index){
   
   Event::enumEventType eventType = eventVector[index].getEventType();
-  unsigned long currentSite = eventVector[index].getCurrentSite();
-  unsigned long currentSite2 = eventVector[index].getCurrentSite2();
-  unsigned long nextSite = eventVector[index].getNextSite();
   
   if(eventType==Event::DIFFUSION){
+    unsigned long currentSite = eventVector[index].getCurrentSite();
+    unsigned long nextSite    = eventVector[index].getNextSite();
     siteVector[currentSite].setState(Site::UNOCCUPY);
     siteVector[nextSite].setState(Site::OCCUPY);
-    vector<Particle>::iterator iter;
-    iter = particleVector.begin();
-    while(iter!=particleVector.end()){
-      if( iter->getSite() == eventVector[index].getCurrentSite()){
-	iter->setSite(nextSite);
+    vector<Particle>::size_type i;
+    for(i=0; i<particleVector.size(); i++){
+      if(particleVector[i].getSite() == currentSite){
+	moveParticle(i,nextSite);
 	break;
       }
-      iter++;
     }
-  }else if(eventType==Event::DESORPTION){
-    siteVector[currentSite].setState(Site::UNOCCUPY);
-
-
-  }else if(eventType==Event::ADSORPTION){
-    //    currentSite->setState(Site::OCCUPY);
-    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
-
-
-  }else if(eventType==Event::DISSOCIATIVE_ADSORPTION){
-    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
-
-
-  }else if(eventType==Event::RECOMBINATIVE_DESORPTION){
-    siteVector[currentSite].setState(Site::UNOCCUPY);
-    siteVector[currentSite2].setState(Site::UNOCCUPY);
   }
-
   pathTypeVector[eventVector[index].getPathType()].occur();
   
   if(eventVector[index].getEventType()==Event::DESORPTION){
-    vector<Particle>::iterator iter;
-    iter = particleVector.begin();
-    while(iter!=particleVector.end()){
-      if( iter->getSite() == eventVector[index].getCurrentSite()){
-	particleVector.erase(iter);
+    vector<Particle>::size_type i;
+    for(i=0; i<particleVector.size(); i++){
+      if( particleVector[i].getSite()
+	  == eventVector[index].getCurrentSite()){
+	deleteParticle(i);
 	break;
       }
-      iter++;
     }
   }else if(eventVector[index].getEventType()==Event::ADSORPTION){
-    particleVector.push_back(eventVector[index].getCurrentSite());
-    siteVector[eventVector[index].getCurrentSite()]
-      .setState(Site::OCCUPY);
+    addParticle(eventVector[index].getCurrentSite());
   }else if(eventVector[index].getEventType()
 	   ==Event::DISSOCIATIVE_ADSORPTION){
-    particleVector.push_back(eventVector[index].getCurrentSite());
-    siteVector[eventVector[index].getCurrentSite()]
-      .setState(Site::OCCUPY);
-    
-    particleVector.push_back(eventVector[index].getCurrentSite2());
-    siteVector[eventVector[index].getCurrentSite2()]
-      .setState(Site::OCCUPY);
+    addParticle(eventVector[index].getCurrentSite());
+    addParticle(eventVector[index].getCurrentSite2());
   }else if(eventVector[index].getEventType()
 	   ==Event::RECOMBINATIVE_DESORPTION){
-    vector<Particle>::iterator iter;
-    int num = 0;
-    iter = particleVector.begin();
-    while(iter!=particleVector.end()){
-      if(num==2){
+    vector<Particle>::size_type i;
+    for(i=0; i<particleVector.size(); i++){
+      if( particleVector[i].getSite()
+	  == eventVector[index].getCurrentSite()){
+	deleteParticle(i);
 	break;
       }
-      if( iter->getSite() == eventVector[index].getCurrentSite()){
-	particleVector.erase(iter);
-	num++;
-      }else if( iter->getSite() == eventVector[index].getCurrentSite2()){
-	particleVector.erase(iter);
-	num++;
-      }else{
-	iter++;
+    }
+    for(i=0; i<particleVector.size(); i++){
+      if( particleVector[i].getSite()
+	  == eventVector[index].getCurrentSite2()){
+	deleteParticle(i);
+	break;
       }
     }
   }

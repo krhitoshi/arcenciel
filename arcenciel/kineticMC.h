@@ -111,7 +111,11 @@ class KineticMC{
   void checkTopSurface();
   void checkButtomSurface();
 
-  void   addSiteNeighbor(Site *site,Site *neighbor);
+  void moveParticle(vector<Particle>::size_type particle,
+		    unsigned long nextSite);
+  void addParticle(unsigned long site);
+  void deleteParticle(vector<Particle>::size_type particle);
+
   double getRandomNumber();
   int findSiteType(char *name);
   int findSiteTypeNoAppend(char *name);
