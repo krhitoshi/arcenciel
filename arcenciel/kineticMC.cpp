@@ -15,7 +15,7 @@ using namespace std;
 /*************************************************/
 /*         プログラム名 バージョン               */
 /*************************************************/
-const char * const PROGRAM_NAME = "ARC ver. 0.37";
+const char * const PROGRAM_NAME = "ARC ver. 0.38";
 const char * const COPYRIGHT_STRING = 
 "Copyright (C) 2002-2004 Hitoshi Kurokawa";
 
@@ -60,7 +60,7 @@ bool KineticMC::mainProcedure(){
   /* エラー処理 */
   catch(string errorString){
     cout << "Error: " << errorString << endl;
-    clear();
+    clear(); /* メモリの解放 */
     return false; 
   }
 
@@ -338,6 +338,11 @@ void KineticMC::loadParticle(){
 	  j--;
 	}
       }
+    }else if(keyString=="RandomConst"){  
+
+      /* 特定サイト種に粒子をランダムに配置し粒子数を一定に保つ */
+      keepNumParticleRandomConst(line);
+
     }else{                   /* 特定サイトに粒子を配置 */
       num = sscanf(line,"%*s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
 		   &site[0],&site[1],&site[2],&site[3],&site[4],
@@ -358,13 +363,68 @@ void KineticMC::loadParticle(){
   }
 }
 
+void KineticMC::keepNumParticleRandomConst(const char *line){
+  char          siteTypeName[LINE];
+  unsigned long numRandomParticle;
+  unsigned long numSite;
+  int           interval;
+  sscanf(line,"%*s %*s %s %lu %d",
+	 siteTypeName,&numRandomParticle,&interval);
+  int siteType = findSiteTypeNoAppend(siteTypeName);
+
+  if(siteType==-1) throw(string("Cannot find site type!!"));
+
+  numSite=0;
+  vector<Site>::iterator iter;
+  iter = siteVector.begin();
+  while(iter!=siteVector.end()){
+    if(iter->getSiteType()==siteType) numSite++;
+    iter++;
+  }
+  if(numSite<numRandomParticle){
+    char error[LINE];
+    sprintf(error,
+	    "Reduce the number [%lu] of particles on the sites [%s]\n"
+	    "It should be less than %lu"
+	    ,numRandomParticle,siteTypeName,numSite); 
+    throw(string(error));
+  }
+  keepNumParticleConstVector
+    .push_back(KeepNumParticleConst
+	       (siteType,numRandomParticle,interval));
+
+  /* サイト番号を保存 */
+  iter = siteVector.begin();
+  while(iter!=siteVector.end()){
+    if(iter->getSiteType()==siteType){
+      keepNumParticleConstVector.back().addSite(iter->getNum());
+    }
+    iter++;
+  }
+
+  unsigned long random;
+  unsigned long int i;
+  for(i=0;i<numRandomParticle;i++){
+    random = (unsigned long)
+      (getRandomNumber()*siteVector.size());
+
+    if(siteVector[random].getSiteType()==siteType &&
+	siteVector[random].getState()==Site::UNOCCUPY){
+      particleVector.push_back(siteVector[random].getNum());
+      siteVector[random].setState(Site::OCCUPY);
+    }else{
+      i--;
+    }
+  }
+}
+
 /*-----------------------------------------------*/
 /*         入力情報の出力                        */
 /*-----------------------------------------------*/
 void KineticMC::printInputData(){
   if(silentFlag) return;
   cout << "Step                     : " << numStep << endl;
-  cout << "Temperature              : " << temperature << endl;
+  cout << "Temperature [K]          : " << temperature << endl;
   cout << "File    Output Interval  : " << fileOutputInterval << endl;
   cout << "Display Output Interval  : " << displayOutputInterval << endl;
 }
@@ -494,9 +554,10 @@ void KineticMC::createPathToExternalPhase(){
 void KineticMC::mainLoop(){
   int step;
   long double eventRandom;
-  vector<Event>::size_type i;  
-  FILE *fp_out, *fp_time;
+  vector<Event>::size_type selectedEvent;  
 
+  /* 出力ファイルオープン */
+  FILE *fp_out, *fp_time;
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
     throw(string("Cannot Open! out.kmc"));
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
@@ -513,28 +574,36 @@ void KineticMC::mainLoop(){
   printIntervalOutput(0,fp_out, fp_time);
   printOccurrence(0,occurrenceStream);
 
+  /*------------------------*/
   /*---- ループスタート ----*/
+  /*------------------------*/
   if(!silentFlag)
     cout << "  STEP      TIME     LAPTIME    PARTICLES\n";
+
+  /* ステップ数は1からカウントする */
   for(step=1;step<numStep+1;step++){
+    /* イベントクリア */
     if(eventVector.size()!=0) eventVector.clear();
 
-    countEvent();
-    eventRandom = getRandomNumber()*sumRate;
+    /* 粒子数の変更 */
+    if(keepNumParticleConstVector.size()!=0) changeNumParticle(step);
 
-    /* printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
-    //    cout << "Randnum " << eventRandom << endl;
 
-    for(i=0;i<eventVector.size();i++){
-      eventRandom -= eventVector[i].getRate();
+    countEvent();            /* イベントリストの作成 */
+
+
+    eventRandom = getRandomNumber()*sumRate;  /* 乱数発生 */
+
+    /* 乱数からイベント選択 */
+    for(selectedEvent=0;
+	selectedEvent<eventVector.size();
+	selectedEvent++){
+      eventRandom -= eventVector[selectedEvent].getRate();
       if(eventRandom < 0.0) break;
     }
-
-    updateSystemTime();
-    /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
     
-    eventOccur(i);
-
+    updateSystemTime();        /* 時間のアップデート */
+    eventOccur(selectedEvent); /* イベントの実行 */
 
     if(step!=0&&step%displayOutputInterval==0){
       if(!silentFlag){
@@ -550,7 +619,11 @@ void KineticMC::mainLoop(){
     }
 
   }
-  /*---- ループエンド ----*/
+  /*------------------------*/
+  /*---- ループエンド   ----*/
+  /*------------------------*/
+
+  /* 出力ファイルクローズ */
   fclose(fp_out);
   fclose(fp_time);
   occurrenceStream.close();
@@ -559,7 +632,75 @@ void KineticMC::mainLoop(){
 }
 
 /*-----------------------------------------------*/
-/*         イベントのカウント                     */
+/*         粒子数の変更                          */
+/*-----------------------------------------------*/
+void KineticMC::changeNumParticle(int step){
+  vector<unsigned long> *vectorPointer; 
+  vector<unsigned long> occupiedSitesVector; 
+  vector<unsigned long> unoccupiedSitesVector; 
+
+  vector<KeepNumParticleConst>::iterator iter;
+  iter = keepNumParticleConstVector.begin();
+  while(iter != keepNumParticleConstVector.end()){
+
+    if(step % iter->getInterval() == 0){
+      unsigned long occupiedNum=0;
+      vectorPointer = iter->getSiteVector();
+      vector<unsigned long>::iterator site;
+      site = vectorPointer->begin();
+      while(site != vectorPointer->end()){
+	if(siteVector[*site].getState()==Site::OCCUPY){
+	  occupiedNum++;
+	  occupiedSitesVector.push_back(*site);
+	}else{
+	  unoccupiedSitesVector.push_back(*site);
+	}
+	site++;
+      }
+      cout << "%%" <<occupiedNum << endl;
+      unsigned long random;
+      unsigned long siteNum;
+      long i;
+      long numAddParticle = iter->getNumParticle()-occupiedNum;
+      cout << numAddParticle << endl;
+      if(numAddParticle>0){          /* 粒子数が増加する場合 */
+  	for(i=0;i<numAddParticle;i++){
+	  random = (unsigned long)
+	    (getRandomNumber()*unoccupiedSitesVector.size());
+	  siteNum = unoccupiedSitesVector[random];
+	  particleVector.push_back(siteVector[siteNum].getNum());
+	  siteVector[siteNum].setState(Site::OCCUPY);
+	  unoccupiedSitesVector
+	    .erase(unoccupiedSitesVector.begin()+random);
+	} 
+      }else if(numAddParticle<0){    /* 粒子数が減少する場合 */
+  	for(i=0;i<labs(numAddParticle);i++){
+	  random = (unsigned long)
+	    (getRandomNumber()*occupiedSitesVector.size());
+	  siteNum = occupiedSitesVector[random];
+	  siteVector[siteNum].setState(Site::UNOCCUPY);
+	  
+	  vector<Particle>::size_type num;
+	  for(num=0;num<particleVector.size();num++){
+	    if(particleVector[num].getSite() == siteNum){
+	      particleVector.erase(particleVector.begin()+num);
+	      break;
+	    }
+	  }
+	  occupiedSitesVector
+	    .erase(occupiedSitesVector.begin()+random);
+	} 
+      }
+      occupiedSitesVector.clear();
+      unoccupiedSitesVector.clear();
+    }
+    iter++;
+  }
+
+}
+
+/*-----------------------------------------------*/
+/*         イベントのカウント                    */
 /*-----------------------------------------------*/
 void  KineticMC::countEvent(){
   vector<Particle>::size_type num;
@@ -915,7 +1056,7 @@ void KineticMC::updateSystemTime(){
 void KineticMC::clear(){
   vector<Site>::size_type i;
   for(i=0; i< siteVector.size(); i++){
-    siteVector[i].clearVectors();
+    siteVector[i].clear();
   }
   siteVector.clear();
   siteTypeVector.clear();
@@ -928,6 +1069,12 @@ void KineticMC::clear(){
   desorptionSiteVector.clear();
   dissosiativeAdsorptionSiteVector.clear();
   recombinativeDesorptionSiteVector.clear();
+  
+  vector<KeepNumParticleConst>::size_type j;
+  for(j=0; j<keepNumParticleConstVector.size();j++){
+    keepNumParticleConstVector[j].clear();
+  }
+  keepNumParticleConstVector.clear();
 }
 
 int KineticMC::getRealNumNeighbor(int site){

@@ -79,7 +79,7 @@ void Site::addNeighbor(unsigned long inNeighbor, int inPathType){
   numNeighbor++;
 }
 
-void Site::clearVectors(){
+void Site::clear(){
   neighborVector.clear();
   pathTypeToNeighborVector.clear();
 }

@@ -43,6 +43,8 @@ class KineticMC{
   int seedType;      /* 乱数の種 (0ならば時間を種とする)*/
   cellPara cell;     /* セルパラメータ */
 
+  /*------- Vector -------*/
+  /* 必ず KineticMC::clear()でメモリを解放する */
 
   vector<Site>     siteVector;      /* サイト情報 */
   vector<SiteType> siteTypeVector;  /* サイト種情報 */
@@ -52,7 +54,10 @@ class KineticMC{
   vector<Particle> particleVector;  /* 粒子情報   */
 
   vector<Event>    eventVector;     /* イベント情報 */
-
+  
+  /* 粒子数を一定に保つための情報 */
+  vector<KeepNumParticleConst> keepNumParticleConstVector;
+    
   vector<unsigned long>    adsorptionSiteVector;
   vector<unsigned long>    desorptionSiteVector;
   vector<SitePair> dissosiativeAdsorptionSiteVector;
@@ -97,7 +102,9 @@ class KineticMC{
   void loadCellParameters( const char *line);
   void loadCoordination( const char *line);
   void loadPair( const char *line);
+  void keepNumParticleRandomConst(const char *line);
 
+  void changeNumParticle(int step);
   void countEvent();
   void eventOccur(vector<Event>::size_type index);
   

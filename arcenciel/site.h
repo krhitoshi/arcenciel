@@ -42,7 +42,7 @@ class Site{
  public:
   static int getNumSite();
   Site(struct position3D inPos, int inType);
-  void clearVectors();
+  void clear();
   unsigned long getNum();
   int  getNumNeighbor();
   unsigned long getNeighbor(int index);
