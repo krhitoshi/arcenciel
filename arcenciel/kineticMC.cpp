@@ -338,31 +338,31 @@ void KineticMC::mainLoop(){
 /*-----------------------------------------------*/
 void  KineticMC::countEvent(){
   vector<Particle>::size_type num;
-  int i;
-  int numNeighbor, saveNumNeighbor;
+  int i=0;
+  int numNeighbor;
   Site *sitePointer;
   sumRate=0.0;
   double rate=0.0;
 
   for(num=0;num<particleVector.size();num++){
-
+    i=0;
     sitePointer = particleVector[num].getSite();
 
-    saveNumNeighbor = sitePointer->getNumNeighbor();
     numNeighbor     = sitePointer->getRealNumNeighbor();
+    vector<Site*> *neighbors = sitePointer->getNeighborVector();
+    vector<Site*>::size_type count;
+    vector<PathType*> *neighborPaths 
+      = sitePointer->getPathTypeToNeighborVector();
 
-    for (i=0; i< saveNumNeighbor; i++){
-      if(sitePointer->getNeighbor(i)->getState()==Site::OCCUPY)
-	continue;
+    for(count=0;count<neighbors->size();count++){
+      if((*neighbors)[count]->getState()!=Site::OCCUPY){
+	rate = (*neighborPaths)[count]->getRate()/numNeighbor;
+	eventVector.push_back(Event(rate,&particleVector[num],
+		    sitePointer,(*neighbors)[count]));
 
-      rate = 
-	sitePointer->getPathTypeToNeighbor(i)->getRate()/numNeighbor;
-
-      eventVector.push_back(Event(rate,&particleVector[num],
-			  sitePointer,sitePointer->getNeighbor(i)));
-
-      sumRate += rate;
-
+	sumRate += rate;
+      }
+      i++;
     }
   }
 }

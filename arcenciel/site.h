@@ -53,6 +53,10 @@ class Site{
   enumSiteState  getState();
   void           setState(enumSiteState value);
   void           addNeighbor(Site *inNeighbor, PathType *inPathType);
+
+  vector<Site*>     *getNeighborVector();
+  vector<PathType*> *getPathTypeToNeighborVector();
+  
 };
 
 #endif

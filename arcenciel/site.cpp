@@ -92,3 +92,10 @@ void Site::clearVectors(){
   pathTypeToNeighborVector.clear();
 }
 
+vector<Site*> *Site::getNeighborVector(){
+  return &neighborVector;
+}
+
+vector<PathType*> *Site::getPathTypeToNeighborVector(){
+  return &pathTypeToNeighborVector;
+}
