@@ -17,6 +17,8 @@ using namespace std;
 /*         プログラム名 バージョン               */
 /*************************************************/
 const char * const PROGRAM_NAME = "ARC ver. 0.33";
+const char * const COPYRIGHT_STRING = 
+"Copyright (C) 2002-2004 Hitoshi Kurokawa";
 
 KineticMC::KineticMC(){
   initialize();
@@ -44,14 +46,37 @@ bool KineticMC::mainProcedure(){
   return true;
 }
 
+/*-----------------------------------------------*/
+/*         プログラム名の表示                    */
+/*-----------------------------------------------*/
 void KineticMC::printProgramName(){
-  cout << PROGRAM_NAME << endl;
-  cout << "Copyright (C) 2002-2004 Hitoshi Kurokawa" << endl;
+  if(silentFlag) return;
+  cout << PROGRAM_NAME     << endl;
+  cout << COPYRIGHT_STRING << endl;
+}
+
+void KineticMC::stdOutput(const char *line){
+  if(silentFlag) return;
+  cout << line;
+}
+
+void KineticMC::stdOutput(string line){
+  if(silentFlag) return;
+  cout << line;
+}
+
+void KineticMC::silentFlagOn(){
+  silentFlag = true;
+}
+
+void KineticMC::silentFlagOff(){
+  silentFlag = false;
 }
 
 void KineticMC::initialize(){
   seedType              = 0;
   timePoisson           = true;
+  silentFlag            = false;
   numParticle           = 1;
   fileOutputInterval    = 50;
   displayOutputInterval = 10000;
@@ -82,7 +107,9 @@ void KineticMC::loadInputFile(){
     sscanf(line,"%*s %lf",&doubleValue);
 
     if(num<1){
-      cout << "Empty Line [" << count <<"]:" << fileName << endl;
+      if(!silentFlag)
+	cout << "Empty Line [" << count <<"]:" << fileName << endl;
+
       count++;
       continue;
     }else if(num==1 || num > 2){
@@ -133,6 +160,7 @@ void KineticMC::loadInputFile(){
 /*         入力情報の出力                        */
 /*-----------------------------------------------*/
 void KineticMC::printInputData(){
+  if(silentFlag) return;
   cout << "Step                     : " << numStep << endl;
   cout << "Temperature              : " << temperature << endl;
   cout << "Number of Bulk Particles : " << numParticle << endl;
@@ -162,9 +190,11 @@ void KineticMC::loadRate(){
   while( fgets( line, LINE, fp ) != NULL ){
     num = sscanf(line, "%s %s %lf %lf %lf",
 		 name1,name2,&frequency,&activEnergy,&distance);
-    if ( num < 4 )
+    if ( num < 4 && !silentFlag)
       cout << "Wrong Format in " << fileName << "!" << endl;
-    cout << name1 << " " << name2 << endl;
+    if(!silentFlag)
+      cout << name1 << " " << name2 << endl;
+
     siteType1 = findSiteTypeNoAppend(name1);
     siteType2 = findSiteTypeNoAppend(name2);
     if(siteType1==NULL || siteType2==NULL) continue;
@@ -275,8 +305,10 @@ void KineticMC::createPathToExternalPhase(){
 
   adsorptionTypeVector.clear();
   desorptionTypeVector.clear();
-  cout << "Adsorption Sites " << adsorptionSiteVector.size() << endl;
-  cout << "Desorption Sites " << desorptionSiteVector.size() << endl;
+  if(!silentFlag){
+    cout << "Adsorption Sites " << adsorptionSiteVector.size() << endl;
+    cout << "Desorption Sites " << desorptionSiteVector.size() << endl;
+  }
 
   if(!adsorptionTypeVectorTwo.empty() ||
      !desorptionTypeVectorTwo.empty()){
@@ -331,10 +363,12 @@ void KineticMC::createPathToExternalPhase(){
       iter++;
     }
   }
-  cout << "Dissociative  Adsorption Sites " 
-       << dissosiativeAdsorptionSiteVector.size() << endl;
-  cout << "Recombinative Desorption Sites "
-       << recombinativeDesorptionSiteVector.size() << endl;
+  if(!silentFlag){
+    cout << "Dissociative  Adsorption Sites " 
+	 << dissosiativeAdsorptionSiteVector.size() << endl;
+    cout << "Recombinative Desorption Sites "
+	 << recombinativeDesorptionSiteVector.size() << endl;
+  }
 
 }
 
@@ -344,7 +378,9 @@ void KineticMC::loadSite(){
   char line[LINE];
   int count;
 
-  cout << "loading " << fileName << "..." << endl;
+  if(!silentFlag)
+    cout << "loading " << fileName << "..." << endl;
+
   loadSiteType();
   if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ) {
     string error = "Cannot Find! " + fileName;
@@ -365,7 +401,9 @@ void KineticMC::loadSite(){
 }
 
 void KineticMC::printSiteInformation(){
+  if(silentFlag) return;
   cout << "Number of Site      : " << siteVector.size() << endl;
+  
   cout.setf(ios::fixed);
   cout.precision(4);
   
@@ -377,7 +415,6 @@ void KineticMC::printSiteInformation(){
        << "  alpha=" << setw(10) << cell.alpha
        << ",  beta=" << setw(10) << cell.beta
        << ", gamma=" << setw(10) << cell.gamma << endl;
-
   vector<SiteType>::size_type i;
   for(i=0;i<siteTypeVector.size();i++){
     cout << "Site Type " << setw(3) << siteTypeVector[i].getNum()
@@ -465,13 +502,15 @@ void KineticMC::mainLoop(){
     throw(string("Cannot Open! occurrence.kmc"));
   }
 
-  cout << "############## Start ##############\n";
+  if(!silentFlag)
+    cout << "############## Start ##############\n";
 
   printIntervalOutput(0,fp_out, fp_time);
   printOccurrence(0,occurrenceStream);
 
   /*---- ループスタート ----*/
-  cout << "  STEP      TIME     LAPTIME    PARTICLES\n";
+  if(!silentFlag)
+    cout << "  STEP      TIME     LAPTIME    PARTICLES\n";
   for(step=1;step<numStep+1;step++){
     if(eventVector.size()!=0) eventVector.clear();
 
@@ -528,9 +567,11 @@ void KineticMC::mainLoop(){
 
 
     if(step!=0&&step%displayOutputInterval==0){
-      printf ("%10d %10.5e %10.5e ",step,systemTime,lapSystemTime);
+      if(!silentFlag){
+	printf ("%10d %10.5e %10.5e ",step,systemTime,lapSystemTime);
+	cout << particleVector.size() << endl;
+      }
       lapSystemTime = 0.0;
-      cout << particleVector.size() << endl;
     }
 
     if(step!=0&&step%fileOutputInterval==0){
@@ -543,8 +584,8 @@ void KineticMC::mainLoop(){
   fclose(fp_out);
   fclose(fp_time);
   occurrenceStream.close();
-  cout << "##############  End  ##############\n";
-  //  printOccurrence();
+  if(!silentFlag)
+    cout << "##############  End  ##############\n";
 }
 
 /*-----------------------------------------------*/
@@ -803,7 +844,8 @@ SiteType*  KineticMC::findSiteType(char *name){
     if(string(name) == siteTypeVector[i].getName()) 
       return &siteTypeVector[i];
   }
-  cout << "Adding a new site type" << endl;
+  if(!silentFlag)
+    cout << "Adding a new site type" << endl;
   return addSiteType(name);  
 }
 
@@ -813,7 +855,8 @@ SiteType* KineticMC::findSiteTypeNoAppend(char *name){
     if(string(name) == siteTypeVector[i].getName()) 
       return &siteTypeVector[i];
   }
-  cout << "Cannot find the site type: " << name << endl;
+  if(!silentFlag)
+    cout << "Cannot find the site type: " << name << endl;
   return NULL;
 }
 
@@ -869,16 +912,3 @@ void KineticMC::clearVectors(){
   eventVector.clear();
 }
 
-void KineticMC::printOccurrence(){
-  ofstream out("occurrence.kmc");
-  if(!out) {
-    cout << "Cannot Open occurrence.kmc";
-    return;
-  }
-  vector<PathType>::size_type i;
-  for(i=0;i< pathTypeVector.size();i++){
-    pathTypeVector[i].printOccurrence(out);
-    pathTypeVector[i].printOccurrence(cout);
-  }
-  out.close();
-}

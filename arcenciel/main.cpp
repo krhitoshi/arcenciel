@@ -19,11 +19,14 @@ using namespace std;
 /*         еседеє                                */
 /*************************************************/
 int main(int argc, char *argv[]){
-  string option = "-v";
+  string silent  = "-s";
+  string version = "-v";
 
   KineticMC arc;
+  if(argc==2 && silent == argv[1]) arc.silentFlagOn();
+
   arc.printProgramName();
-  if(argc==2 && option == argv[1]) exit(0);
+  if(argc==2 && version == argv[1]) exit(0);
 
   if(!arc.mainProcedure()){
     cout << "Exit!" << endl;

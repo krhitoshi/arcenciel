@@ -38,6 +38,7 @@ class KineticMC{
   void initialize();
   void updateSystemTime();
   bool timePoisson;
+  bool silentFlag;   /* 標準出力の有無 */
 
   int seedType;
   cellPara cell;
@@ -66,6 +67,10 @@ class KineticMC{
   KineticMC();
   bool mainProcedure();
   void printProgramName();
+  void stdOutput(const char *line);
+  void stdOutput(string line);
+  void silentFlagOn();
+  void silentFlagOff();
   void loadInputFile();
   void printInputData();
   void loadSite();
@@ -81,8 +86,6 @@ class KineticMC{
   void checkTopSurface();
   void checkButtomSurface();
 
-  void printOccurrence();
-  
   void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
   void printOccurrence(int step, ostream &stream);
 
