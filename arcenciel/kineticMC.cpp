@@ -587,8 +587,7 @@ void  KineticMC::countEvent(){
 	int pathType=(*neighborPaths)[count];
 	rate = pathTypeVector[pathType].getRate()/numNeighbor;
 	eventVector.push_back(
-	      Event(rate,&particleVector[num],
-		    site,(*neighbors)[count],pathType));
+	      Event(rate, site,(*neighbors)[count],pathType));
 
 	sumRate += rate;
       }
@@ -604,8 +603,7 @@ void  KineticMC::countEvent(){
 	int pathType = 
 	  findPathType(siteVector[*iter].getSiteType(),exType);
 	rate = pathTypeVector[pathType].getRate();
-	eventVector.push_back(Event(rate, NULL,
-				    *iter,pathType,Event::DESORPTION));
+	eventVector.push_back(Event(rate, *iter,pathType,Event::DESORPTION));
 	sumRate += rate;
       }
       iter++;
@@ -620,7 +618,7 @@ void  KineticMC::countEvent(){
 	int pathType = findPathType(exType, 
 			    siteVector[(*iter)].getSiteType());
 	rate = pathTypeVector[pathType].getRate();
-	eventVector.push_back(Event(rate, NULL,
+	eventVector.push_back(Event(rate,
 				    *iter,pathType,Event::ADSORPTION));
 	sumRate += rate;
       }
@@ -640,7 +638,7 @@ void  KineticMC::countEvent(){
 	int pathType = 
 	  findPathType(siteVector[site1].getSiteType(),exType);
 	rate = pathTypeVector[pathType].getRate();
-	eventVector.push_back(Event(rate, NULL,NULL, site1,site2,
+	eventVector.push_back(Event(rate, site1,site2,
 		    pathType,Event::RECOMBINATIVE_DESORPTION));
 	sumRate += rate;
       }
@@ -660,7 +658,7 @@ void  KineticMC::countEvent(){
 	int pathType =
 	  findPathType(exType, siteVector[site1].getSiteType());
 	rate = pathTypeVector[pathType].getRate();
-	eventVector.push_back(Event(rate, NULL,NULL, site1,site2,
+	eventVector.push_back(Event(rate, site1,site2,
 		    pathType,Event::DISSOCIATIVE_ADSORPTION));
 	sumRate += rate;
       }
@@ -946,9 +944,7 @@ int KineticMC::getRealNumNeighbor(int site){
 
 void KineticMC::eventOccur(vector<Event>::size_type index){
   
-  //eventVector[index].occur();
   Event::enumEventType eventType = eventVector[index].getEventType();
-  Particle *particle      = eventVector[index].getParticle();
   unsigned long currentSite = eventVector[index].getCurrentSite();
   unsigned long currentSite2 = eventVector[index].getCurrentSite2();
   unsigned long nextSite = eventVector[index].getNextSite();
@@ -956,8 +952,15 @@ void KineticMC::eventOccur(vector<Event>::size_type index){
   if(eventType==Event::DIFFUSION){
     siteVector[currentSite].setState(Site::UNOCCUPY);
     siteVector[nextSite].setState(Site::OCCUPY);
-    particle->setSite(nextSite);
-    
+    vector<Particle>::iterator iter;
+    iter = particleVector.begin();
+    while(iter!=particleVector.end()){
+      if( iter->getSite() == eventVector[index].getCurrentSite()){
+	iter->setSite(nextSite);
+	break;
+      }
+      iter++;
+    }
   }else if(eventType==Event::DESORPTION){
     siteVector[currentSite].setState(Site::UNOCCUPY);
 
