@@ -32,29 +32,29 @@ class Site{
   static  int numSite;            /* サイトの総数 */
 
   vector<Site*>     neighborVector;
-  vector<PathType*> pathTypeToNeighborVector;
+  vector<int> pathTypeToNeighborVector;
 
   unsigned long num;              /* 番号 */
-  SiteType     *type;             /* 種類 */
+  int           siteType;         /* 種類 */
   pos3D         pos;              /* 座標 */
   enumSiteState state;            /* 状態 */
   int           numNeighbor;    /* 隣接するサイトの数 */
  public:
   static int getNumSite();
-  Site(struct position3D inPos, SiteType *inType);
+  Site(struct position3D inPos, int inType);
   void clearVectors();
   unsigned long getNum();
   int  getNumNeighbor();
   int  getRealNumNeighbor();
   Site *getNeighbor(int index);
-  void setPathTypeToNeighbor(int index, PathType *inPathType);
-  PathType *getPathTypeToNeighbor(int index);
-  SiteType      *getType();
+  void setPathTypeToNeighbor(int index, int inPathType);
+  int  getPathTypeToNeighbor(int index);
+  int            getSiteType();
   enumSiteState  getState();
   void           setState(enumSiteState value);
-  void           addNeighbor(Site *inNeighbor, PathType *inPathType);
+  void           addNeighbor(Site *inNeighbor, int inPathType);
   vector<Site*>     *getNeighborVector();
-  vector<PathType*> *getPathTypeToNeighborVector();
+  vector<int>   *getPathTypeToNeighborVector();
 };
 
 #endif

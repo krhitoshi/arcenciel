@@ -47,16 +47,16 @@ class KineticMC{
   vector<Site>     siteVector;      /* サイト情報 */
   vector<SiteType> siteTypeVector;  /* サイト種情報 */
 
-  vector<Site*>    adsorptionSiteVector;
-  vector<Site*>    desorptionSiteVector;
-  vector<SitePair> dissosiativeAdsorptionSiteVector;
-  vector<SitePair> recombinativeDesorptionSiteVector;
-
   vector<PathType> pathTypeVector;  /* パス種情報 */
 
   vector<Particle> particleVector;  /* 粒子情報   */
 
   vector<Event>    eventVector;     /* イベント情報 */
+
+  vector<Site*>    adsorptionSiteVector;
+  vector<Site*>    desorptionSiteVector;
+  vector<SitePair> dissosiativeAdsorptionSiteVector;
+  vector<SitePair> recombinativeDesorptionSiteVector;
 
   /* 入力ファイル名 */
   string siteFileName;
@@ -77,7 +77,7 @@ class KineticMC{
 
   void initialize();
   void updateSystemTime();
-  void clearVectors();
+  void clear();
  
   void printSiteInformation();
   void printRateInformation();
@@ -93,7 +93,6 @@ class KineticMC{
   void loadParticle();
   void loadPath();
   void loadRate();
-  void loadSiteType();
 
   void loadCellParameters( const char *line);
   void loadCoordination( const char *line);
@@ -106,10 +105,10 @@ class KineticMC{
 
   void   addSiteNeighbor(Site *site,Site *neighbor);
   double getRandomNumber();
-  SiteType* findSiteType(char *name);
-  SiteType* findSiteTypeNoAppend(char *name);
-  SiteType* addSiteType(char *name);
-  PathType* findPathType(SiteType *type1, SiteType *type2);
+  int findSiteType(char *name);
+  int findSiteTypeNoAppend(char *name);
+  int addSiteType(char *name);
+  int findPathType(int type1, int type2);
 };
 
 #endif

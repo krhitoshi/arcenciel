@@ -17,19 +17,21 @@ class PathType{
   unsigned long numOccurrence;
   unsigned long lapOccurrence;
   int num;
-  SiteType *type1, *type2;
+  int      type1, type2;
   double   activEnergy, frequency, rate;
  public:
-  PathType(SiteType *inType1, SiteType *inType2,
+  PathType(int inType1, int inType2,
 	   double inFrequency, double inActivEnergy,
 	   double temperature);
   void      print();
   void      occur();
-  double    getRate();
+  int       getNum();
   double    getAverageOccu();
-  SiteType *getSiteType1();
-  SiteType *getSiteType2();
-  string    getSiteNames();
+  int       getSiteType1();
+  int       getSiteType2();
+  double    getActivEnergy();
+  double    getFrequency();
+  double    getRate();
   unsigned long getNumOccurrence();
   bool      getTwoSitesFlag();
   void      twoSitesFlagOn();

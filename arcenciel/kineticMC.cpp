@@ -19,8 +19,11 @@ const char * const PROGRAM_NAME = "ARC ver. 0.36";
 const char * const COPYRIGHT_STRING = 
 "Copyright (C) 2002-2004 Hitoshi Kurokawa";
 
+/*-----------------------------------------------*/
+/*         コンストラクタ                        */
+/*-----------------------------------------------*/
 KineticMC::KineticMC(){
-  initialize();
+  initialize(); /* 計算パラメータの初期化 */
 }
 
 /*-----------------------------------------------*/
@@ -28,29 +31,36 @@ KineticMC::KineticMC(){
 /*-----------------------------------------------*/
 bool KineticMC::mainProcedure(){
   try{
+    /* 特殊サイト種 Exの追加
+       気相(Ex)からのサイトへの粒子吸着を表すパスの設定に使用 */
     siteTypeVector.push_back(SiteType("Ex"));
 
-    loadInputFile(); 
+    loadInputFile();        /* 計算条件の読み込み */
 
-    loadSiteType();
-    loadSite();
-    printSiteInformation();
+    loadSite();             /* サイト情報の読み込み */
+    printSiteInformation(); /* サイト情報の出力*/
 
-    loadRate();
-    printRateInformation();
+    loadRate();             /* rate情報の読み込み */
+    printRateInformation(); /* rate情報の出力 */
 
-    loadPath();
+    loadPath();             /* パス情報の読み込み */
+
+    /* rate情報において気相(Ex)とパスが設定されている場合に
+       新たにExとのパス情報を作成する */
     createPathToExternalPhase();    
 
-    printInputData();
-    loadParticle();
+    loadParticle();         /* 粒子初期配置の読み込みと配置 */
 
-    mainLoop();
+    printInputData();       /* 入力データの出力 */
+
+    mainLoop();             /* キネティックモンテカルロ計算開始 */
+    clear();
   }
 
   /* エラー処理 */
   catch(string errorString){
     cout << "Error: " << errorString << endl;
+    clear();
     return false; 
   }
 
@@ -185,46 +195,6 @@ void KineticMC::loadInputFile(){
 }
 
 /*-----------------------------------------------*/
-/*         site種情報の読み込み site.kmc         */
-/*-----------------------------------------------*/
-void KineticMC::loadSiteType(){
-  FILE *fp;
-  char line[LINE];
-  int count;
-  char name[LINE];
-  int num;
-  SiteType *siteType;
-  
-  if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ){
-    string error = "Cannot Find! " + siteFileName;
-    throw(error);
-  }
-
-  count=1;
-  while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* コメントアウト処理 */
-
-    if( count == 1 || count == 2){
-      count++;
-      continue;
-    }else{
-      num = sscanf(line, "%s",name);
-      if ( num != 1 && !silentFlag)
-	cout << "Wrong coordination!!" << endl;
-      
-      if(SiteType::getNumSiteType()==0){
-	siteType = addSiteType(name);
-      }else{
-	siteType = findSiteType(name);
-      }
-      
-    }
-    count++;
-  }
-  fclose(fp);
-}
-
-/*-----------------------------------------------*/
 /*         site情報の読み込み site.kmc           */
 /*-----------------------------------------------*/
 void KineticMC::loadSite(){
@@ -242,11 +212,11 @@ void KineticMC::loadSite(){
     if(line[0]=='#') continue; /* コメントアウト処理 */
 
     if( count == 1 )
-      ;
+      ;                         /* 一行目はスキップ(タイトル等) */
     else if( count == 2 )
-      loadCellParameters(line);
+      loadCellParameters(line); /* セルパラメータの読み込み */
     else
-      loadCoordination(line);
+      loadCoordination(line);   /* サイト種, 座標の読み込み */
     count++;
   }
   fclose(fp);
@@ -263,7 +233,7 @@ void KineticMC::loadRate(){
   double distance;
   int  num;
   double frequency,activEnergy;
-  SiteType *siteType1, *siteType2;
+  int siteType1, siteType2;
 
   if( ( fp = fopen( rateFileName.c_str(), "r" ) ) == NULL ){ 
     string error = "Cannot Find! " + rateFileName;
@@ -280,7 +250,8 @@ void KineticMC::loadRate(){
 
     siteType1 = findSiteTypeNoAppend(name1);
     siteType2 = findSiteTypeNoAppend(name2);
-    if(siteType1==NULL || siteType2==NULL) continue;
+
+    if(siteType1==-1 || siteType2==-1) continue;
     pathTypeVector.push_back(PathType(siteType1,siteType2,
 			    frequency,activEnergy,temperature));
     if(num == 5){
@@ -323,7 +294,7 @@ void KineticMC::loadPath(){
       for(j=0;j<sitePointer->getNumNeighbor();j++){
 	neighbor = sitePointer->getNeighbor(j);
 	sitePointer->setPathTypeToNeighbor(j,
-	   findPathType(sitePointer->getType(), neighbor->getType()));
+	   findPathType(sitePointer->getSiteType(), neighbor->getSiteType()));
       }
     }
   }
@@ -397,13 +368,13 @@ void KineticMC::printInputData(){
 }
 
 void KineticMC::createPathToExternalPhase(){
-  vector<SiteType*> adsorptionTypeVector;
-  vector<SiteType*> desorptionTypeVector;
-  vector<SiteType*> adsorptionTypeVectorTwo;
-  vector<SiteType*> desorptionTypeVectorTwo;
+  vector<int> adsorptionTypeVector;
+  vector<int> desorptionTypeVector;
+  vector<int> adsorptionTypeVectorTwo;
+  vector<int> desorptionTypeVectorTwo;
 
   vector<PathType>::size_type i;
-  SiteType *exType = findSiteType("Ex");
+  int exType = findSiteType("Ex");
 
   for(i=0;i<pathTypeVector.size();i++){
     if(pathTypeVector[i].getSiteType1()==exType){
@@ -428,17 +399,17 @@ void KineticMC::createPathToExternalPhase(){
     vector<Site>::iterator iter;
     iter = siteVector.begin();
     while(iter!=siteVector.end()){
-      vector<SiteType*>::iterator iter2;
+      vector<int>::iterator iter2;
       iter2 = adsorptionTypeVector.begin();
       while(iter2!=adsorptionTypeVector.end()){
-	if(iter->getType()==*iter2){
+	if(iter->getSiteType()==*iter2){
 	  adsorptionSiteVector.push_back(&(*iter));	
 	}
 	iter2++;
       }
       iter2 = desorptionTypeVector.begin();
       while(iter2!=desorptionTypeVector.end()){
-	if(iter->getType()==*iter2){
+	if(iter->getSiteType()==*iter2){
 	  desorptionSiteVector.push_back(&(*iter));
 	}
 	iter2++;
@@ -457,7 +428,7 @@ void KineticMC::createPathToExternalPhase(){
   if(!adsorptionTypeVectorTwo.empty() ||
      !desorptionTypeVectorTwo.empty()){
     vector<Site>::iterator iter,iter2;
-    vector<SiteType*>::iterator type;
+    vector<int>::iterator type;
     vector<Site*> *neighbors;
     vector<Site*>::iterator neighborIter;
 
@@ -465,10 +436,10 @@ void KineticMC::createPathToExternalPhase(){
     while(iter!=siteVector.end()){
       iter2 = iter+1;
       while(iter2!=siteVector.end()){
-	if(iter->getType() == iter2->getType()){
+	if(iter->getSiteType() == iter2->getSiteType()){
 	  type = adsorptionTypeVectorTwo.begin();
 	  while(type!=adsorptionTypeVectorTwo.end()){
-	    if(iter->getType() == *type){
+	    if(iter->getSiteType() == *type){
 	      neighbors = iter->getNeighborVector();
 	      neighborIter = neighbors->begin();
 	      while(neighborIter != neighbors->end()){
@@ -486,7 +457,7 @@ void KineticMC::createPathToExternalPhase(){
 
 	  type = desorptionTypeVectorTwo.begin();
 	  while(type!=desorptionTypeVectorTwo.end()){
-	    if(iter->getType() == *type){
+	    if(iter->getSiteType() == *type){
 	      neighbors = iter->getNeighborVector();
 	      neighborIter = neighbors->begin();
 	      while(neighborIter != neighbors->end()){
@@ -560,6 +531,8 @@ void KineticMC::mainLoop(){
     updateSystemTime();
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
     eventVector[i].occur();
+    pathTypeVector[eventVector[i].getPathType()].occur();
+
     if(eventVector[i].getEventType()==Event::DESORPTION){
        vector<Particle>::iterator iter;
        iter = particleVector.begin();
@@ -628,7 +601,7 @@ void  KineticMC::countEvent(){
   int i=0;
   int numNeighbor;
   Site *sitePointer;
-  SiteType *exType = findSiteType("Ex");
+  int exType = findSiteType("Ex");
 
   sumRate=0.0;
   double rate=0.0;
@@ -640,15 +613,16 @@ void  KineticMC::countEvent(){
     numNeighbor     = sitePointer->getRealNumNeighbor();
     vector<Site*> *neighbors = sitePointer->getNeighborVector();
     vector<Site*>::size_type count;
-    vector<PathType*> *neighborPaths 
+    vector<int> *neighborPaths 
       = sitePointer->getPathTypeToNeighborVector();
 
     for(count=0;count<neighbors->size();count++){
       if((*neighbors)[count]->getState()!=Site::OCCUPY){
-	rate = (*neighborPaths)[count]->getRate()/numNeighbor;
+	int pathType=(*neighborPaths)[count];
+	rate = pathTypeVector[pathType].getRate()/numNeighbor;
 	eventVector.push_back(
 	      Event(rate,&particleVector[num],
-	    sitePointer,(*neighbors)[count],(*neighborPaths)[count]));
+	    sitePointer,(*neighbors)[count],pathType));
 
 	sumRate += rate;
       }
@@ -661,10 +635,10 @@ void  KineticMC::countEvent(){
     iter = desorptionSiteVector.begin();
     while(iter != desorptionSiteVector.end()){
       if((*iter)->getState()==Site::OCCUPY){
-	PathType *path = findPathType((*iter)->getType(),exType);
-	rate = path->getRate();
+	int pathType = findPathType((*iter)->getSiteType(),exType);
+	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,
-				    *iter,path,Event::DESORPTION));
+				    *iter,pathType,Event::DESORPTION));
 	sumRate += rate;
       }
       iter++;
@@ -676,10 +650,10 @@ void  KineticMC::countEvent(){
     iter = adsorptionSiteVector.begin();
     while(iter != adsorptionSiteVector.end()){
       if((*iter)->getState()==Site::UNOCCUPY){
-	PathType *path = findPathType(exType, (*iter)->getType());
-	rate = path->getRate();
+	int pathType = findPathType(exType, (*iter)->getSiteType());
+	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,
-				    *iter,path,Event::ADSORPTION));
+				    *iter,pathType,Event::ADSORPTION));
 	sumRate += rate;
       }
       iter++;
@@ -695,10 +669,10 @@ void  KineticMC::countEvent(){
       site2 = iter->getSite2();
       if(site1->getState()==Site::OCCUPY &&
 	 site2->getState()==Site::OCCUPY){
-	PathType *path = findPathType(site1->getType(),exType);
-	rate = path->getRate();
+	int pathType = findPathType(site1->getSiteType(),exType);
+	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,NULL, site1,site2,
-		    path,Event::RECOMBINATIVE_DESORPTION));
+		    pathType,Event::RECOMBINATIVE_DESORPTION));
 	sumRate += rate;
       }
       iter++;
@@ -714,10 +688,10 @@ void  KineticMC::countEvent(){
       site2 = iter->getSite2();
       if(site1->getState()==Site::UNOCCUPY &&
 	 site2->getState()==Site::UNOCCUPY){
-	PathType *path = findPathType(exType, site1->getType());
-	rate = path->getRate();
+	int pathType = findPathType(exType, site1->getSiteType());
+	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,NULL, site1,site2,
-		    path,Event::DISSOCIATIVE_ADSORPTION));
+		    pathType,Event::DISSOCIATIVE_ADSORPTION));
 	sumRate += rate;
       }
       iter++;
@@ -757,9 +731,24 @@ void KineticMC::printSiteInformation(){
 void KineticMC::printRateInformation(){
   if(silentFlag) return;
 
+  cout.setf(ios::fixed);
+  cout.precision(5);
+
+
   vector<PathType>::size_type k;
   for(k=0;k<pathTypeVector.size();k++){
-    pathTypeVector[k].print();
+    //    pathTypeVector[k].print();
+    cout << "Path Type "
+	 << " " << setw(3) << pathTypeVector[k].getNum() << ": "
+	 << " " << setw(5) << 
+      siteTypeVector[pathTypeVector[k].getSiteType1()].getName()
+	 << " " << setw(5) << 
+      siteTypeVector[pathTypeVector[k].getSiteType2()].getName()
+	 << " " << setw(10) << pathTypeVector[k].getActivEnergy();
+    cout.setf(ios::fixed|ios::scientific);
+    cout << " " << setw(10) << pathTypeVector[k].getFrequency()
+	 << " " << setw(10) << pathTypeVector[k].getRate() << endl;
+    
   }
 }
 
@@ -787,13 +776,19 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
 void KineticMC::printOccurrence(int step, ostream &stream){
   vector<PathType>::size_type i;
   //  SiteType *exType = findSiteType("Ex");
+  int  type1, type2;
+  char name[LINE];
   stream << step << " " << systemTime << " " << particleVector.size() ;
   for(i=0;i<pathTypeVector.size();i++){
     //    if(pathTypeVector[i].getSiteType1()==exType||
     // pathTypeVector[i].getSiteType2()==exType)
     //	  pathTypeVector[i].printLapOccurrence(cout);
+    type1 = pathTypeVector[i].getSiteType1();
+    type2 = pathTypeVector[i].getSiteType2();
     if(step==0){
-      stream << " " << pathTypeVector[i].getSiteNames();
+      sprintf(name,"%s-%s",siteTypeVector[type1].getName().c_str()
+	      ,siteTypeVector[type2].getName().c_str());
+	stream << name;
     }else{
       stream << " " << pathTypeVector[i].getNumOccurrence();
     }
@@ -828,7 +823,7 @@ void  KineticMC::loadCoordination( const char *line){
   if ( num != 4 && !silentFlag)
     cout << "Wrong coordination!!" << endl;
 
-  SiteType *foundSiteType = findSiteType(name);
+  int foundSiteType = findSiteType(name);
 
   siteVector.push_back(Site(pos,foundSiteType));
 }
@@ -863,11 +858,10 @@ void  KineticMC::loadPair( const char *line){
     site1 = &siteVector[pair[i][0]];
     site2 = &siteVector[pair[i][1]];
 
-    
     site1->addNeighbor(site2,
-		    findPathType(site1->getType(),site2->getType()));
+	    findPathType(site1->getSiteType(),site2->getSiteType()));
     site2->addNeighbor(site1,
-		    findPathType(site2->getType(),site1->getType()));
+	    findPathType(site2->getSiteType(),site1->getSiteType()));
   }
 }
 
@@ -875,57 +869,58 @@ void  KineticMC::loadPair( const char *line){
 /*-----------------------------------------------*/
 /*         site typeの追加                       */
 /*-----------------------------------------------*/
-SiteType*  KineticMC::addSiteType(char *name){
+int KineticMC::addSiteType(char *name){
   siteTypeVector.push_back(SiteType(name));
 
   /*  printf ("%d %s \n",siteType[siteTypeNum-1].num,
       siteType[siteTypeNum-1].name);*/
-  return &siteTypeVector[SiteType::getNumSiteType()-1];
+  return siteTypeVector.back().getNum();
 }
 
 
 /*-----------------------------------------------*/
 /*         site typeの検索                       */
 /*-----------------------------------------------*/
-SiteType*  KineticMC::findSiteType(char *name){
+int KineticMC::findSiteType(char *name){
    int i;
   for(i=0;i<SiteType::getNumSiteType();i++){
     if(string(name) == siteTypeVector[i].getName()) 
-      return &siteTypeVector[i];
+      return siteTypeVector[i].getNum();
   }
   return addSiteType(name);  
 }
 
-SiteType* KineticMC::findSiteTypeNoAppend(char *name){
+int KineticMC::findSiteTypeNoAppend(char *name){
    int i;
   for(i=0;i<SiteType::getNumSiteType();i++){
     if(string(name) == siteTypeVector[i].getName()) 
-      return &siteTypeVector[i];
+      return siteTypeVector[i].getNum();
   }
   if(!silentFlag)
     cout << "Cannot find the site type: " << name << endl;
-  return NULL;
+  return -1;
 }
 
 
 /*-----------------------------------------------*/
 /*         pair typeの検索                       */
 /*-----------------------------------------------*/
-PathType*  KineticMC::findPathType(SiteType *type1,SiteType *type2){
+int  KineticMC::findPathType(int type1,int type2){
   vector<PathType>::size_type i;
 
   for(i=0;i<pathTypeVector.size();i++){
-    if(pathTypeVector[i].getSiteType1()->getNum()==type1->getNum()&&
-       pathTypeVector[i].getSiteType2()->getNum()==type2->getNum())
-      return &pathTypeVector[i];
+    if(pathTypeVector[i].getSiteType1()==type1&&
+       pathTypeVector[i].getSiteType2()==type2)
+      return pathTypeVector[i].getNum();
   }
 
   string error = "Cannot find!! path type "
-    + type1->getName() + " " + type2->getName();
+    + siteTypeVector[type1].getName() + " " 
+    + siteTypeVector[type2].getName();
 
   throw(error);
 
-  return NULL;
+  return -1;
 }
 
 
@@ -948,14 +943,21 @@ void KineticMC::updateSystemTime(){
   lapSystemTime += add;
 }
 
-void KineticMC::clearVectors(){
+void KineticMC::clear(){
   vector<Site>::size_type i;
   for(i=0; i< siteVector.size(); i++){
     siteVector[i].clearVectors();
   }
   siteVector.clear();
   siteTypeVector.clear();
+
   pathTypeVector.clear();
+
   eventVector.clear();
+
+  adsorptionSiteVector.clear();
+  desorptionSiteVector.clear();
+  dissosiativeAdsorptionSiteVector.clear();
+  recombinativeDesorptionSiteVector.clear();
 }
 

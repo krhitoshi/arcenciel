@@ -1,7 +1,7 @@
 #include "event.h"
 
 Event::Event(double inRate, Particle *inParticle,
-     Site *inCurrentSite, Site *inNextSite, PathType *inPathType){
+     Site *inCurrentSite, Site *inNextSite, int inPathType){
   rate        = inRate;
   particle    = inParticle;
   currentSite = inCurrentSite;
@@ -11,7 +11,7 @@ Event::Event(double inRate, Particle *inParticle,
 }
 
 Event::Event(double inRate, Particle *inParticle,
-	     Site *inCurrentSite, PathType *inPathType,
+	     Site *inCurrentSite, int inPathType,
 	     enumEventType inEventType){
   rate = inRate;
   particle = inParticle;
@@ -23,7 +23,7 @@ Event::Event(double inRate, Particle *inParticle,
 Event::Event(double inRate, 
 	     Particle *inParticle, Particle *inParticle2,
 	     Site *inCurrentSite, Site *inCurrentSite2,
-	     PathType *inPathType, enumEventType inEventType){
+	     int inPathType, enumEventType inEventType){
   rate = inRate;
   particle = inParticle;
   particle2 = inParticle2;
@@ -35,6 +35,10 @@ Event::Event(double inRate,
 
 double Event::getRate(){
   return rate;
+}
+
+int Event::getPathType(){
+  return pathType;
 }
 
 Particle *Event::getParticle(){
@@ -73,7 +77,6 @@ void Event::occur(){
     currentSite->setState(Site::UNOCCUPY);
     currentSite2->setState(Site::UNOCCUPY);
   }
-  pathType->occur();
 }
 
 Event::enumEventType Event::getEventType(){

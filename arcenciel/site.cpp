@@ -27,10 +27,10 @@ void   SiteType::setName(string value){
   name = value;
 }
 
-Site::Site(struct position3D inPos, SiteType *inType){
+Site::Site(struct position3D inPos, int inType){
   num  = numSite;
   pos  = inPos;
-  type = inType;
+  siteType = inType;
   state = Site::UNOCCUPY;
   numNeighbor = 0;
   numSite++;
@@ -57,16 +57,16 @@ Site *Site::getNeighbor(int index){
   return neighborVector[index];
 }
 
-PathType *Site::getPathTypeToNeighbor(int index){
+int Site::getPathTypeToNeighbor(int index){
   return pathTypeToNeighborVector[index];
 }
 
-void Site::setPathTypeToNeighbor(int index,PathType *inPathType){
+void Site::setPathTypeToNeighbor(int index,int inPathType){
   pathTypeToNeighborVector[index] = inPathType;
 }
 
-SiteType *Site::getType(){
-  return type;
+int Site::getSiteType(){
+  return siteType;
 }
 
 void Site::setState(enumSiteState value){
@@ -82,7 +82,7 @@ unsigned long Site::getNum(){
 }
 
 
-void Site::addNeighbor(Site *inNeighbor, PathType *inPathType){
+void Site::addNeighbor(Site *inNeighbor, int inPathType){
   neighborVector.push_back(inNeighbor);
   pathTypeToNeighborVector.push_back(inPathType);
   numNeighbor++;
@@ -97,6 +97,6 @@ vector<Site*> *Site::getNeighborVector(){
   return &neighborVector;
 }
 
-vector<PathType*> *Site::getPathTypeToNeighborVector(){
+vector<int> *Site::getPathTypeToNeighborVector(){
   return &pathTypeToNeighborVector;
 }

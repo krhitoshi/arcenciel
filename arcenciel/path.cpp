@@ -8,7 +8,7 @@ using namespace std;
 
 int PathType::numPathType;
 
-PathType::PathType(SiteType *inType1, SiteType *inType2,
+PathType::PathType(int inType1, int inType2,
 		   double inFrequency, double inActivEnergy,
 		   double temperature){
   twoSitesFlag     = false;
@@ -25,8 +25,12 @@ PathType::PathType(SiteType *inType1, SiteType *inType2,
   numPathType++;
 }
 
+int PathType::getNum(){
+  return num;
+}
+
 void PathType::print(){
-  cout.setf(ios::fixed);
+  /*  cout.setf(ios::fixed);
   cout.precision(5);
 
   cout << "Path Type "
@@ -36,26 +40,26 @@ void PathType::print(){
        << " " << setw(10) << activEnergy;
   cout.setf(ios::fixed|ios::scientific);
   cout << " " << setw(10) << frequency
-       << " " << setw(10) << rate << endl;
-}
-
-string PathType::getSiteNames(){
-  string temp;
-  temp  = type1->getName();
-  temp += "-";
-  temp += type2->getName();
-  return temp;
+  << " " << setw(10) << rate << endl;*/
 }
 
 double PathType::getRate(){
   return rate;
 }
 
-SiteType *PathType::getSiteType1(){
+double PathType::getActivEnergy(){
+  return activEnergy;
+}
+
+double PathType::getFrequency(){
+  return frequency;
+}
+
+int PathType::getSiteType1(){
   return type1;
 }
 
-SiteType *PathType::getSiteType2(){
+int PathType::getSiteType2(){
   return type2;
 }
 
@@ -78,26 +82,4 @@ void PathType::twoSitesFlagOff(){
 
 unsigned long PathType::getNumOccurrence(){
   return numOccurrence;
-}
-
-void PathType::printOccurrence(){
-  cout << setw(5) << type1->getName()
-       << " - "
-       << setw(5) << type2->getName()
-       << ":" << numOccurrence << endl;
-}
-
-void PathType::printOccurrence(ostream &stream){
-  stream << setw(5) << type1->getName()
-	 << " - "
-	 << setw(5) << type2->getName()
-	 << ":" << numOccurrence << endl;
-}
-
-void PathType::printLapOccurrence(ostream &stream){
-  stream << setw(5) << type1->getName()
-	 << " - "
-	 << setw(5) << type2->getName()
-	 << ":" << lapOccurrence << endl;
-  lapOccurrence = 0;
 }
