@@ -1,6 +1,13 @@
 #ifndef ARC_KINETIC_MC_H
 #define ARC_KINETIC_MC_H
 
+
+#include "particle.h"
+#include "site.h"
+#include "path.h"
+#include "event.h"
+
+
 class KineticMC{
  private:
   int    fileOutputInterval;
