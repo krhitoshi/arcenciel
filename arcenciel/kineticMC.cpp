@@ -46,7 +46,7 @@ bool KineticMC::mainProcedure(){
 
 void KineticMC::printProgramName(){
   cout << PROGRAM_NAME << endl;
-  cout << "Copyright (C) 2002-2003 Hitoshi Kurokawa" << endl;
+  cout << "Copyright (C) 2002-2004 Hitoshi Kurokawa" << endl;
 }
 
 void KineticMC::initialize(){
@@ -68,6 +68,7 @@ void KineticMC::loadInputFile(){
   string fileName="input.kmc";
   char line[LINE], key[LINE];
   int  value, num, count;
+  double doubleValue;
 
   if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
     string error = "Cannot Find! " + fileName;
@@ -78,6 +79,8 @@ void KineticMC::loadInputFile(){
   while( fgets( line, LINE, fp ) != NULL ){
     if(line[0]=='#') continue;
     num = sscanf(line,"%s %d",key,&value);
+    sscanf(line,"%*s %lf",&doubleValue);
+
     if(num<1){
       cout << "Empty Line [" << count <<"]:" << fileName << endl;
       count++;
@@ -101,7 +104,7 @@ void KineticMC::loadInputFile(){
     }else if(!strcmp(key,"step")){
       numStep            = value;
     }else if(!strcmp(key,"temperature")){
-      temperature        = value;
+      temperature        = doubleValue;
     }else if(!strcmp(key,"poisson")){
       if(value==0)
 	timePoisson = false;
@@ -465,7 +468,7 @@ void KineticMC::mainLoop(){
   cout << "############## Start ##############\n";
 
   printIntervalOutput(0,fp_out, fp_time);
-  print10IntervalsOutput(0,occurrenceStream);
+  printOccurrence(0,occurrenceStream);
 
   /*---- ループスタート ----*/
   cout << "  STEP      TIME     LAPTIME    PARTICLES\n";
@@ -528,11 +531,13 @@ void KineticMC::mainLoop(){
       printf ("%10d %10.5e %10.5e ",step,systemTime,lapSystemTime);
       lapSystemTime = 0.0;
       cout << particleVector.size() << endl;
-      print10IntervalsOutput(step,occurrenceStream);
     }
 
-    if(step!=0&&step%fileOutputInterval==0)
+    if(step!=0&&step%fileOutputInterval==0){
       printIntervalOutput(step,fp_out, fp_time);
+      printOccurrence(step,occurrenceStream);
+    }
+
   }
   /*---- ループエンド ----*/
   fclose(fp_out);
@@ -669,10 +674,10 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
   fflush(fp_out);
 }
 
-void KineticMC::print10IntervalsOutput(int step, ostream &stream){
+void KineticMC::printOccurrence(int step, ostream &stream){
   vector<PathType>::size_type i;
   //  SiteType *exType = findSiteType("Ex");
-  stream << step << " " << systemTime ;
+  stream << step << " " << systemTime << " " << particleVector.size() ;
   for(i=0;i<pathTypeVector.size();i++){
     //    if(pathTypeVector[i].getSiteType1()==exType||
     // pathTypeVector[i].getSiteType2()==exType)

@@ -84,7 +84,7 @@ class KineticMC{
   void printOccurrence();
   
   void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
-  void print10IntervalsOutput(int step, ostream &stream);
+  void printOccurrence(int step, ostream &stream);
 
   void loadNumSite( const char *line);
   void loadCellParameters( const char *line);
