@@ -3,6 +3,7 @@
 
 /*---- イベント情報 ----*/
 #include "site.h"
+#include "path.h"
 #include "particle.h"
 
 class Event{
@@ -14,9 +15,10 @@ class Event{
   Particle *particle;
   Site *currentSite;
   Site *nextSite;
+  PathType *pathType;
  public:
   Event(double inRate, Particle *inParticle,
-	Site *inCurrentSite, Site *inNextSite);
+	Site *inCurrentSite, Site *inNextSite, PathType *inPathType);
   double    getRate();
   void      occur();
   Particle *getParticle();

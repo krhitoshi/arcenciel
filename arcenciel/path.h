@@ -16,10 +16,12 @@ class PathType{
 	   double inFrequency, double inActivEnergy,
 	   double temperature);
   void      print();
+  void      occur();
   double    getRate();
   SiteType *getSiteType1();
   SiteType *getSiteType2();
   unsigned long getNumOccurrence();
+  void      printOccurrence();
 };
 
 #endif

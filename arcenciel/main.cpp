@@ -25,7 +25,10 @@ int main(int argc, char *argv[]){
   arc.printProgramName();
   if(argc==2 && option == argv[1]) exit(0);
 
-  arc.mainProcedure();
+  if(!arc.mainProcedure()){
+    cout << "Exit!" << endl;
+    exit(1);
+  }
   
   return 0;
 }

@@ -43,7 +43,7 @@ class KineticMC{
   void clearVectors();
  public:
   KineticMC();
-  void mainProcedure();
+  bool mainProcedure();
   void printProgramName();
   void loadInputFile();
   void printInputData();
@@ -65,6 +65,7 @@ class KineticMC{
   void addSiteNeighbor(Site *site,Site *neighbor);
   double getRandomNumber();
   SiteType* findSiteType(char *name);
+  SiteType* findSiteTypeNoAppend(char *name);
   SiteType* addSiteType(char *name);
   PathType* findPathType(SiteType *type1, SiteType *type2);
 

@@ -48,6 +48,17 @@ SiteType *PathType::getSiteType2(){
   return type2;
 }
 
+void PathType::occur(){
+  numOccurrence++;  
+}
+
 unsigned long PathType::getNumOccurrence(){
   return numOccurrence;
+}
+
+void PathType::printOccurrence(){
+  cout << setw(5) << type1->getName()
+       << " - "
+       << setw(5) << type2->getName()
+       << ":" << numOccurrence << endl;
 }

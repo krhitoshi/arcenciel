@@ -5,41 +5,35 @@
 #include <time.h>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 using namespace std;
 
 #include "common.h"
 #include "kineticMC.h"
+#include "path.h"
 
 KineticMC::KineticMC(){
   initialize();
 }
 
-void KineticMC::mainProcedure(){
-  loadInputFile();
-  loadSite();
-  printSiteInformation();
-  loadRate();
-  loadPath();
-  printInputData();
-  putParticles();
-  mainLoop();
-}
+bool KineticMC::mainProcedure(){
+  try{
+    loadInputFile();
+    loadSite();
+    printSiteInformation();
+    loadRate();
+    loadPath();
+    printInputData();
+    putParticles();
+    mainLoop();
+  }
 
-/*************************************************/
-/*         エラー出力、終了                      */
-/*************************************************/
-void KineticMC::fatalError(string message){
-  cout << message << endl; 
-  exit(1);
-}
+  catch(string errorString){
+    cout << "Error: " << errorString << endl;
+    return false;
+  }
 
-/*************************************************/
-/*         ファイルオープンエラー出力、終了      */
-/*************************************************/
-void KineticMC::fileOpenError(string fileName){
-  string errorString;
-  errorString = "Cannot open " + fileName +"!!";
-  fatalError(errorString);
+  return true;
 }
 
 void KineticMC::printProgramName(){
@@ -64,40 +58,61 @@ void KineticMC::initialize(){
 
 void KineticMC::loadInputFile(){
   FILE *fp;
-  char fileName[]="input.kmc";
+  string fileName="input.kmc";
   char line[LINE], key[LINE];
-  int  value;
+  int  value, num, count;
 
-  if( ( fp = fopen( fileName, "r" ) ) == NULL ) 
-    fileOpenError(fileName);
-
+  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + fileName;
+    throw(error);
+  }
+  
+  count = 1;
   while( fgets( line, LINE, fp ) != NULL ){
-    sscanf(line,"%s %d",key,&value);
-    /*    printf ("Key: %s Value: %d\n",key,value);*/
+    num = sscanf(line,"%s %d",key,&value);
+    if(num<1){
+      cout << "Empty Line [" << count <<"]:" << fileName << endl;
+      count++;
+      continue;
+    }else if(num==1 || num > 2){
+      string lineString = line;
+      lineString.erase(lineString.size()-1,1);
+      stringstream error;
+      error << "Invalid Line ["  << count << "]: '" 
+	  << lineString << "'";
+      throw(string(error.str()));
+    }
 
-    if(!strcmp(key,"fileInterval"))        
+    
+    if(!strcmp(key,"fileInterval")){
       fileOutputInterval = value;
-    else if(!strcmp(key,"displayInterval")) 
+    }else if(!strcmp(key,"displayInterval")){
       displayOutputInterval = value;
-    else if(!strcmp(key,"bulkParticle")) 
+    }else if(!strcmp(key,"bulkParticle")){
       numParticle = value;
-    else if(!strcmp(key,"step"))        numStep            = value;
-    else if(!strcmp(key,"temperature")) temperature        = value;
-    else if(!strcmp(key,"poisson")){
+    }else if(!strcmp(key,"step")){
+      numStep            = value;
+    }else if(!strcmp(key,"temperature")){
+      temperature        = value;
+    }else if(!strcmp(key,"poisson")){
       if(value==0)
 	timePoisson = false;
       else
 	timePoisson = true;
     }else if(!strcmp(key,"seed")){
       seedType = value;
-    }else
-      cout << "Unknown Keyword!! :" << key << endl;
+    }else{
+      string error = "Unknown Keyword!: ";
+      error += key;
+      throw(error);
+    }
+    count++;
   }
 
   if(seedType==0){
-    srand(time(NULL));
+    srand(time(NULL)); /* 乱数の種を現在の時間とする */
   }else{
-    srand(seedType);
+    srand(seedType);   /* 0以外の値が入力されていればそれを使用 */  
   }
 
   fclose(fp);
@@ -120,28 +135,36 @@ void KineticMC::printInputData(){
 /*-----------------------------------------------*/
 void KineticMC::loadRate(){
   FILE *fp;
-  char fileName[]="rate.kmc";
+  string fileName="rate.kmc";
   char line[LINE];
   char name1[LINE],name2[LINE];
   int  num;
   double frequency,activEnergy;
   SiteType *siteType1, *siteType2;
 
-  if( ( fp = fopen( fileName, "r" ) ) == NULL ) 
-    fileOpenError(fileName);
+  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){ 
+    string error = "Cannot Find! " + fileName;
+    throw(error);
+    }
 
   while( fgets( line, LINE, fp ) != NULL ){
     num = sscanf(line, "%s %s %lf %lf",
 		 name1,name2,&frequency,&activEnergy);
-    if ( num != 4 ) printf("Wrong Format in %s!!\n",fileName);
-    
-    siteType1 = findSiteType(name1);
-    siteType2 = findSiteType(name2);
-    
+    if ( num != 4 )
+      cout << "Wrong Format in " << fileName << "!" << endl;
+    cout << name1 << " " << name2 << endl;
+    siteType1 = findSiteTypeNoAppend(name1);
+    siteType2 = findSiteTypeNoAppend(name2);
+    if(siteType1==NULL || siteType2==NULL) continue;
     pathTypeVector.push_back(PathType(siteType1,siteType2,
 			    frequency,activEnergy,temperature));
   }
   fclose(fp);
+
+  vector<PathType>::size_type k;
+  for(k=0;k<pathTypeVector.size();k++){
+    pathTypeVector[k].print();
+  }
 }
 
 /*-----------------------------------------------*/
@@ -149,11 +172,14 @@ void KineticMC::loadRate(){
 /*-----------------------------------------------*/
 void KineticMC::loadPath(){
   FILE *fp;
-  char fileName[]="path.kmc";
+  string fileName="path.kmc";
   char line[LINE];
   int count;
 
-  if( ( fp = fopen( fileName, "r" ) ) == NULL ) fileOpenError(fileName);
+  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + fileName;
+    throw(error);
+  }
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
@@ -176,22 +202,20 @@ void KineticMC::loadPath(){
       }
     }
   }
-  vector<PathType>::size_type k;
-  for(k=0;k<pathTypeVector.size();k++){
-    pathTypeVector[k].print();
-  }
 }
 
 void KineticMC::loadSite(){
   FILE *fp;
-  char fileName[]="site.kmc";
+  string fileName="site.kmc";
   char line[LINE];
   int count;
 
   cout << "loading " << fileName << "..." << endl;
   loadSiteType();
-  if( ( fp = fopen( fileName, "r" ) ) == NULL ) 
-    fileOpenError(fileName);
+  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ) {
+    string error = "Cannot Find! " + fileName;
+    throw(error);
+  }
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
@@ -232,14 +256,17 @@ void KineticMC::printSiteInformation(){
 /*-----------------------------------------------*/
 void KineticMC::loadSiteType(){
   FILE *fp;
-  char fileName[]="site.kmc";
+  string fileName="site.kmc";
   char line[LINE];
   int count;
   char name[LINE];
   int num;
   SiteType *siteType;
   
-  if( ( fp = fopen( fileName, "r" ) ) == NULL ) fileOpenError(fileName);
+  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + fileName;
+    throw(error);
+  }
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
@@ -288,11 +315,10 @@ void KineticMC::mainLoop(){
   int step;
   vector<Event>::size_type i;  
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
-    fileOpenError("out.kmc");
+    throw(string("Cannot Find! out.kmc"));
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
-    fileOpenError("time.kmc");
+    throw(string("Cannot Find! time.kmc"));
   cout << "############## Start ##############\n";
-
 
   printIntervalOutput(0,fp_out, fp_time);
 
@@ -316,14 +342,7 @@ void KineticMC::mainLoop(){
     }
 
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
-    Site *currentSite=eventVector[i].getCurrentSite();
-    Site *nextSite   =eventVector[i].getNextSite();
-
-    currentSite->setState(Site::UNOCCUPY);
-    nextSite->setState(Site::OCCUPY);
-    //    findPathType(currentSite->getType(),nextSite->getType())->occur();
-    eventVector[i].getParticle()
-      ->setSite(eventVector[i].getNextSite());
+    eventVector[i].occur();
 
     if(step!=0&&step%displayOutputInterval==0)
       printf ("%10d %10.5e\n",step,systemTime);
@@ -339,7 +358,7 @@ void KineticMC::mainLoop(){
     vector<PathType>::size_type i;
     
     for(i=0;i< pathTypeVector.size();i++){
-    cout << i << " :" << pathTypeVector[i].getNumOccurrence() << endl;
+      pathTypeVector[i].printOccurrence();
     }
   }
 }
@@ -369,7 +388,7 @@ void  KineticMC::countEvent(){
       if((*neighbors)[count]->getState()!=Site::OCCUPY){
 	rate = (*neighborPaths)[count]->getRate()/numNeighbor;
 	eventVector.push_back(Event(rate,&particleVector[num],
-		    sitePointer,(*neighbors)[count]));
+		    sitePointer,(*neighbors)[count],(*neighborPaths)[count]));
 
 	sumRate += rate;
       }
@@ -407,7 +426,7 @@ void  KineticMC::loadNumSite( const char *line){
   unsigned long dummy;
   num = sscanf( line, "%lu",&dummy);
   if ( num != 1 ) 
-    fatalError("Not Find the number of sites!");
+    throw(string("Not Find the number of sites!"));
 
 }
 
@@ -420,7 +439,8 @@ void  KineticMC::loadCellParameters( const char *line){
 		,&cell.a,&cell.b,&cell.c
 		,&cell.alpha,&cell.beta,&cell.gamma);
   if ( num != 6 ) 
-    fatalError("The number of cell parameters is wrong!\nIt should be 6!");
+    throw(string(
+	 "The number of cell parameters is wrong!\nIt should be 6!"));
 
 }
 
@@ -448,7 +468,7 @@ void  KineticMC::loadNumPath( const char *line){
   int num;
   num = sscanf( line, "%lu",&numPath);
   if ( num != 1 ) 
-    fatalError("Not Find the number of paths!");
+    throw(string("Not Find the number of paths!"));
 }
 
 /*-----------------------------------------------*/
@@ -505,7 +525,7 @@ SiteType*  KineticMC::addSiteType(char *name){
 /*         site typeの検索                       */
 /*-----------------------------------------------*/
 SiteType*  KineticMC::findSiteType(char *name){
-  int i;
+   int i;
   for(i=0;i<SiteType::getNumSiteType();i++){
     if(string(name) == siteTypeVector[i].getName()) 
       return &siteTypeVector[i];
@@ -513,6 +533,17 @@ SiteType*  KineticMC::findSiteType(char *name){
   cout << "Adding a new site type" << endl;
   return addSiteType(name);  
 }
+
+SiteType* KineticMC::findSiteTypeNoAppend(char *name){
+   int i;
+  for(i=0;i<SiteType::getNumSiteType();i++){
+    if(string(name) == siteTypeVector[i].getName()) 
+      return &siteTypeVector[i];
+  }
+  cout << "Cannot find the site type: " << name << endl;
+  return NULL;
+}
+
 
 /*-----------------------------------------------*/
 /*         pair typeの検索                       */
@@ -525,9 +556,11 @@ PathType*  KineticMC::findPathType(SiteType *type1,SiteType *type2){
        pathTypeVector[i].getSiteType2()->getNum()==type2->getNum())
       return &pathTypeVector[i];
   }
-  printf ("Cannot find!! path type %s %s\n",
-	  type1->getName().c_str(),type2->getName().c_str());
-  fatalError("Exit!");
+
+  string error = "Cannot find!! path type "
+    + type1->getName() + " " + type2->getName();
+
+  throw(error);
 
   return NULL;
 }
