@@ -337,22 +337,23 @@ void KineticMC::mainLoop(){
 /*         イベントのカウント                     */
 /*-----------------------------------------------*/
 void  KineticMC::countEvent(){
-  int num,i;
-  int numNeighbor;
+  vector<Particle>::size_type num;
+  int i;
+  int numNeighbor, saveNumNeighbor;
   Site *sitePointer;
   sumRate=0.0;
   double rate=0.0;
-  for(num=0;num<numParticle;num++){
+
+  for(num=0;num<particleVector.size();num++){
+
     sitePointer = particleVector[num].getSite();
-    numNeighbor = sitePointer->getNumNeighbor();
-    for (i=0; i< sitePointer->getNumNeighbor(); i++){
-      if(sitePointer->getNeighbor(i)->getState()==Site::OCCUPY)
-	numNeighbor--;
-    }
-    for (i=0; i< sitePointer->getNumNeighbor(); i++){
+
+    saveNumNeighbor = sitePointer->getNumNeighbor();
+    numNeighbor     = sitePointer->getRealNumNeighbor();
+
+    for (i=0; i< saveNumNeighbor; i++){
       if(sitePointer->getNeighbor(i)->getState()==Site::OCCUPY)
 	continue;
-
 
       rate = 
 	sitePointer->getPathTypeToNeighbor(i)->getRate()/numNeighbor;

@@ -45,6 +45,7 @@ class Site{
   void clearVectors();
   unsigned long getNum();
   int  getNumNeighbor();
+  int  getRealNumNeighbor();
   Site *getNeighbor(int index);
   void setPathTypeToNeighbor(int index, PathType *inPathType);
   PathType *getPathTypeToNeighbor(int index);

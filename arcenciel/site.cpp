@@ -43,6 +43,15 @@ int Site::getNumNeighbor(){
   return numNeighbor;
 }
 
+int Site::getRealNumNeighbor(){
+  int num=0;
+  vector<Site*>::size_type i;
+  for(i=0;i<neighborVector.size();i++){
+    if(neighborVector[i]->getState()==Site::UNOCCUPY) num++;
+  }
+  return num;
+}
+
 Site *Site::getNeighbor(int index){
   return neighborVector[index];
 }
