@@ -100,7 +100,7 @@ void KineticMC::loadInputFile(){
   FILE *fp;
   string fileName="input.kmc";
   char line[LINE], key[LINE];
-  string keyString;
+  string keyString,valueString;
   int num, count;
   int    intValue; 
   double doubleValue;
@@ -118,6 +118,7 @@ void KineticMC::loadInputFile(){
     keyString = key;
     sscanf(line,"%*s %lf",&doubleValue);
     sscanf(line,"%*s %s",charValue);
+    valueString = charValue;
 
     if(num<1){
       if(!silentFlag)

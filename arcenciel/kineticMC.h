@@ -1,9 +1,11 @@
 #ifndef ARC_KINETIC_MC_H
 #define ARC_KINETIC_MC_H
+#include <stdio.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
+using namespace std;
 
 #include "particle.h"
 #include "site.h"
@@ -35,8 +37,6 @@ class KineticMC{
   double temperature; /* 温度 */
   double systemTime, lapSystemTime;  /* 時間 */
 
-  void initialize();
-  void updateSystemTime();
   bool timePoisson;
   bool silentFlag;   /* 標準出力の有無 */
 
@@ -60,49 +60,58 @@ class KineticMC{
   vector<Event>    eventVector;
   long double sumRate;
 
-  void fatalError(string message);
-  void fileOpenError(string fileName);
-  void clearVectors();
+  /* ファイル名 */
+  string siteFileName;
+  string pathFileName;
+  string rateFileName;
+
+
  public:
   KineticMC();
   bool mainProcedure();
+
   void printProgramName();
-  void stdOutput(const char *line);
-  void stdOutput(string line);
   void silentFlagOn();
   void silentFlagOff();
-  void loadInputFile();
-  void printInputData();
-  void loadSite();
-  void printCell();
+
+ private:
+  void mainLoop();
+
+  void initialize();
+  void updateSystemTime();
+  void clearVectors();
+ 
   void printSiteInformation();
-  void loadPath();
+  void printRateInformation();
+  void printInputData();
+  void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
+  void printOccurrence(int step, ostream &stream);
+
   void createPathToExternalPhase();
+
+
+  void loadInputFile();
+  void loadSite();
+  void loadPath();
   void loadRate();
   void loadSiteType();
+
+  void loadCellParameters( const char *line);
+  void loadCoordination( const char *line);
+  void loadPair( const char *line);
+
   void putParticles();
-  void mainLoop();
+  void countEvent();
   
   void checkTopSurface();
   void checkButtomSurface();
 
-  void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
-  void printOccurrence(int step, ostream &stream);
-
-  void loadNumSite( const char *line);
-  void loadCellParameters( const char *line);
-  void loadCoordination( const char *line);
-  void loadNumPath( const char *line);
-  void loadPair( const char *line);
-  void addSiteNeighbor(Site *site,Site *neighbor);
+  void   addSiteNeighbor(Site *site,Site *neighbor);
   double getRandomNumber();
   SiteType* findSiteType(char *name);
   SiteType* findSiteTypeNoAppend(char *name);
   SiteType* addSiteType(char *name);
   PathType* findPathType(SiteType *type1, SiteType *type2);
-
-  void countEvent(void);
-   
 };
 
 #endif
