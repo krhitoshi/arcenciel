@@ -13,6 +13,11 @@ using namespace std;
 #include "kineticMC.h"
 #include "path.h"
 
+/*************************************************/
+/*         プログラム名 バージョン               */
+/*************************************************/
+const char * const PROGRAM_NAME = "ARC ver. 0.31";
+
 KineticMC::KineticMC(){
   initialize();
 }
@@ -85,7 +90,7 @@ void KineticMC::loadInputFile(){
 	  << lineString << "'";
       throw(string(error.str()));
     }
-
+  
     
     if(!strcmp(key,"fileInterval")){
       fileOutputInterval = value;
@@ -417,9 +422,6 @@ void KineticMC::mainLoop(){
       printf ("%10d %10.5e %10.5e ",step,systemTime,lapSystemTime);
       lapSystemTime = 0.0;
       cout << particleVector.size() << endl;
-    }
-
-    if(step!=0&&step%(displayOutputInterval*10)==0){
       print10IntervalsOutput(step,occurrenceStream);
     }
 
@@ -517,7 +519,7 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
 void KineticMC::print10IntervalsOutput(int step, ostream &stream){
   vector<PathType>::size_type i;
   //  SiteType *exType = findSiteType("Ex");
-  stream << step;
+  stream << step << " " << systemTime ;
   for(i=0;i<pathTypeVector.size();i++){
     //    if(pathTypeVector[i].getSiteType1()==exType||
     // pathTypeVector[i].getSiteType2()==exType)
