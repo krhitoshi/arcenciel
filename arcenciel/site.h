@@ -55,7 +55,6 @@ class Site{
   void           addNeighbor(Site *inNeighbor, PathType *inPathType);
   vector<Site*>     *getNeighborVector();
   vector<PathType*> *getPathTypeToNeighborVector();
-  
 };
 
 #endif

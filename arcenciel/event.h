@@ -41,6 +41,7 @@ class Event{
   void      occur();
   Particle *getParticle();
   Site     *getCurrentSite();
+  Site     *getCurrentSite2();
 };
 
 #endif

@@ -12,7 +12,8 @@ using namespace std;
 /*---- パスの種類 ----*/
 class PathType{
  private:
-  bool          twoSitesFlag;
+  bool          twoSitesFlag;  /* 解離吸着,再結合脱離 */
+  double        twoSitesDistance;
   static    int numPathType;
   unsigned long numOccurrence;
   unsigned long lapOccurrence;
@@ -34,6 +35,8 @@ class PathType{
   bool      getTwoSitesFlag();
   void      twoSitesFlagOn();
   void      twoSitesFlagOff();
+  void      setTwoSitesDistance(double inDistance);
+  double    getTwoSitesDistance();
   void      printOccurrence();
   void      printOccurrence(ostream &stream);
   void      printLapOccurrence(ostream &stream);

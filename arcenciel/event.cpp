@@ -45,19 +45,35 @@ Site *Event::getCurrentSite(){
   return currentSite;
 }
 
+Site *Event::getCurrentSite2(){
+  return currentSite2;
+}
+
 void Event::occur(){
   if(eventType==DIFFUSION){
     currentSite->setState(Site::UNOCCUPY);
     nextSite->setState(Site::OCCUPY);
     particle->setSite(nextSite);
-    pathType->occur();
+
+
   }else if(eventType==DESORPTION){
     currentSite->setState(Site::UNOCCUPY);
-    pathType->occur();
+
+
   }else if(eventType==ADSORPTION){
+    //    currentSite->setState(Site::OCCUPY);
+    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
+
+
+  }else if(eventType==DISSOCIATIVE_ADSORPTION){
+    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
+
+
+  }else if(eventType==RECOMBINATIVE_DESORPTION){
     currentSite->setState(Site::UNOCCUPY);
-    pathType->occur();
+    currentSite2->setState(Site::UNOCCUPY);
   }
+  pathType->occur();
 }
 
 Event::enumEventType Event::getEventType(){

@@ -11,7 +11,8 @@ int PathType::numPathType;
 PathType::PathType(SiteType *inType1, SiteType *inType2,
 		   double inFrequency, double inActivEnergy,
 		   double temperature){
-  twoSitesFlag = false;
+  twoSitesFlag     = false;
+  twoSitesDistance = 0.0;
   numOccurrence = 0;
   lapOccurrence = 0;
   num = numPathType;
@@ -62,6 +63,14 @@ SiteType *PathType::getSiteType2(){
 void PathType::occur(){
   numOccurrence++;  
   lapOccurrence++;
+}
+
+void PathType::setTwoSitesDistance(double inDistance){
+  twoSitesDistance = inDistance;
+}
+
+double PathType::getTwoSitesDistance(){
+  return twoSitesDistance;
 }
 
 bool PathType::getTwoSitesFlag(){

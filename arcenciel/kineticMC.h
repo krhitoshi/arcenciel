@@ -51,7 +51,6 @@ class KineticMC{
   vector<SiteType> siteTypeVector;
 
   unsigned long numPath;
-
   vector<PathType> pathTypeVector;
 
   int numParticle;
