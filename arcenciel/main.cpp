@@ -12,8 +12,6 @@
 #include "common.h"
 #include "kineticMC.h"
 
-struct basicInformation kmc;
-
 /*************************************************/
 /*         еседеє                                */
 /*************************************************/
@@ -24,27 +22,12 @@ int main(){
   KineticMC arc;
   arc.loadInputFile();
   arc.printInputData();
+  arc.loadSite();
+  arc.loadRate();
+  arc.loadPath();
 
-  initialize();
-  loadInput();
-  loadSite();
-  loadRate();
-  loadPath();
-
-  kmc.numParticle = NUM_PERTICLE;
-
-  printInputData();
-
-  for(i=0;i<kmc.numParticle;i++){
-    random = (unsigned long)
-      ((double)rand()/(double)RAND_MAX*kmc.numSite);
-    if(kmc.site[random].state==UNOCCUPY){
-      kmc.site[random].state=OCCUPY;
-      kmc.particle[i].site = &kmc.site[random];
-    }
-  }
- 
-  mainLoop();
-
+  arc.putParticles();
+  arc.mainLoop();
+  
   return 0;
 }

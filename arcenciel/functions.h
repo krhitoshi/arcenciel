@@ -1,5 +1,6 @@
 #ifndef ARC_FUNCTIONS_H
 #define ARC_FUNCTIONS_H
+
 /*---- プロトタイプ宣言 ----*/
 void fileOpenError(char *fileName);
 void fatalError(char *string);
@@ -12,7 +13,7 @@ void loadPath(void);
 
 void printInputData(void);
 void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
-void mainLoop(void);
+void mainLoop();
 void loadNumSite( const char *line);
 void loadCellParameters( const char *line);
 void loadCoordination( const char *line);
