@@ -15,6 +15,5 @@ typedef struct cellParameters{
   float a,b,c,alpha,beta,gamma;
 }cellPara;
 
-#include "functions.h"
 
 #endif

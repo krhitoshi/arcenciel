@@ -13,6 +13,23 @@ KineticMC::KineticMC(){
   initialize();
 }
 
+/*************************************************/
+/*         エラー出力、終了                      */
+/*************************************************/
+void KineticMC::fatalError(string message){
+  cout << message << endl; 
+  exit(1);
+}
+
+/*************************************************/
+/*         ファイルオープンエラー出力、終了      */
+/*************************************************/
+void KineticMC::fileOpenError(string fileName){
+  string errorString;
+  errorString = "Cannot open " + fileName +"!!";
+  fatalError(errorString);
+}
+
 void KineticMC::printProgramName(){
   cout << PROGRAM_NAME << endl;
   cout << "Copyright (C) 2002-2003 Hitoshi Kurokawa" << endl;
@@ -176,8 +193,8 @@ void KineticMC::loadPath(){
   }
   for(i=0;i<pathTypeNum;i++){
     printf("Path Type %3d: %s %s %9.5g %9.5g %9.5g\n",i,
-	   pathType[i].type[0]->name,
-	   pathType[i].type[1]->name,
+	   pathType[i].type[0]->getName().c_str(),
+	   pathType[i].type[1]->getName().c_str(),
 	   pathType[i].activEnergy,
 	   pathType[i].frequency,
 	   pathType[i].rate	   
@@ -216,7 +233,8 @@ void KineticMC::loadSite(){
     printf("Cell Parameters[Deg]: alpha=%7.4f beta=%7.4f gamma=%7.4f\n"
 	   ,cell.alpha,cell.beta,cell.gamma);
     for(j=0;j<siteTypeNum;j++){
-      printf("Site Type %3d: %s\n",siteType[j].num,siteType[j].name);
+      printf("Site Type %3d: %s\n",siteType[j].getNum(),
+	     siteType[j].getName().c_str());
     }
   }
 }
@@ -507,7 +525,7 @@ void  KineticMC::loadPair( const char *line){
 struct siteTypeInformation*  KineticMC::addSiteType(char *name){
   siteTypeNum++;
   if(siteTypeNum>siteTypeNumMax){
-    int initNumMax, i;
+    int initNumMax;
     initNumMax = siteTypeNumMax;
     siteTypeNumMax += 10;
     siteType = (struct siteTypeInformation *)
@@ -515,13 +533,9 @@ struct siteTypeInformation*  KineticMC::addSiteType(char *name){
     if(siteType==NULL) 
       fatalError("Cannot allocate memory for the site types!");
 
-    for(i=initNumMax;i<siteTypeNumMax;i++){
-      siteType[i].num = 0;
-      siteType[i].name[0] = '\0';
-    }
   }
-  strncpy(siteType[siteTypeNum-1].name,name,NAME_LIMIT);
-  siteType[siteTypeNum-1].num = siteTypeNum-1;
+  siteType[siteTypeNum-1].setName(string(name));
+  siteType[siteTypeNum-1].setNum(siteTypeNum-1);
 
   /*  printf ("%d %s \n",siteType[siteTypeNum-1].num,
       siteType[siteTypeNum-1].name);*/
@@ -563,7 +577,7 @@ struct pathTypeInformation*  KineticMC::addPathType(struct siteTypeInformation *
 struct siteTypeInformation*  KineticMC::findSiteType(char *name){
   int i;
   for(i=0;i<siteTypeNum;i++){
-    if(strcmp(name,siteType[i].name)==0) return &siteType[i];
+    if(string(name) == siteType[i].getName()) return &siteType[i];
   }
   printf ("Cannot find!! site type\n");
   return addSiteType(name);  
@@ -577,11 +591,12 @@ struct pathTypeInformation*  KineticMC::findPathType
  ,struct siteTypeInformation *type2){
   int i;
   for(i=0;i<pathTypeNum;i++){
-    if((pathType[i].type[0]->num==type1->num
-	&& pathType[i].type[1]->num==type2->num))
+    if((pathType[i].type[0]->getNum()==type1->getNum()
+	&& pathType[i].type[1]->getNum()==type2->getNum()))
       return &pathType[i];
   }
-  printf ("Cannot find!! path type %s %s\n",type1->name,type2->name);
+  printf ("Cannot find!! path type %s %s\n",
+	  type1->getName().c_str(),type2->getName().c_str());
   return addPathType(type1,type2);  
 }
 

@@ -1,6 +1,9 @@
 #ifndef ARC_KINETIC_MC_H
 #define ARC_KINETIC_MC_H
 
+#include <iostream>
+#include <string>
+#include <vector>
 
 #include "particle.h"
 #include "site.h"
@@ -18,10 +21,13 @@ class KineticMC{
   void initialize();
 
   bool timePoisson;
+
   int seedType;
   cellPara cell;
   unsigned long numSite;
   struct siteInformation *site;
+
+  vector<siteTypeInformation> siteTypeVector;
 
   int siteTypeNum, siteTypeNumMax;
   struct siteTypeInformation *siteType;
@@ -37,6 +43,9 @@ class KineticMC{
   unsigned long numEvent, numMaxEvent;
   struct eventInformation *event;
   long double sumRate;
+
+  void fatalError(string message);
+  void fileOpenError(string fileName);
 
  public:
   KineticMC();
