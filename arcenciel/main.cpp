@@ -1,7 +1,7 @@
 /*****************************************************************************/
-/*             Kinetic Monte Carlo Program "ARC" (arc-en-ciel)                                */
+/*             Kinetic Monte Carlo Program "ARC" (arc-en-ciel)               */
 /*                                                                           */
-/*             Copyright (C) 2002-2003 Hitoshi Kurokawa                           */
+/*             Copyright (C) 2002-2003 Hitoshi Kurokawa                      */
 /*****************************************************************************/
 
 #include <stdio.h>
@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "common.h"
+#include "kineticMC.h"
 
 struct basicInformation kmc;
 
@@ -19,6 +20,10 @@ struct basicInformation kmc;
 int main(){
   int i;
   unsigned long random;
+
+  KineticMC arc;
+  arc.loadInputFile();
+  arc.printInputData();
 
   initialize();
   loadInput();

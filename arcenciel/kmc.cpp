@@ -16,8 +16,10 @@ void mainLoop(){
   long double eventRandom;
   int step;
   unsigned int i;  
-  if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) fileOpenError("out.kmc");
-  if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) fileOpenError("time.kmc");
+  if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
+    fileOpenError("out.kmc");
+  if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
+    fileOpenError("time.kmc");
 
   printIntervalOutput(0,fp_out, fp_time);
 
