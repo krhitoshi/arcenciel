@@ -16,7 +16,7 @@ using namespace std;
 /*************************************************/
 /*         プログラム名 バージョン               */
 /*************************************************/
-const char * const PROGRAM_NAME = "ARC ver. 0.32";
+const char * const PROGRAM_NAME = "ARC ver. 0.33";
 
 KineticMC::KineticMC(){
   initialize();
