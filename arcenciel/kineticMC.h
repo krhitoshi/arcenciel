@@ -25,15 +25,13 @@ class KineticMC{
   int seedType;
   cellPara cell;
 
-  unsigned long numSite;
-  struct siteInformation *site;
+  vector<Site>     siteVector;
 
   vector<SiteType> siteTypeVector;
 
   unsigned long numPath;
 
-  int pathTypeNum, pathTypeNumMax;
-  struct pathTypeInformation *pathType;
+  vector<PathType> pathTypeVector;
 
   int numParticle;
   struct particleInformation particle[MAX_NUM_PERTICLE];
@@ -44,7 +42,7 @@ class KineticMC{
 
   void fatalError(string message);
   void fileOpenError(string fileName);
-
+  void clearVectors();
  public:
   KineticMC();
   void mainProcedure();
@@ -66,19 +64,11 @@ class KineticMC{
   void loadCoordination( const char *line);
   void loadNumPath( const char *line);
   void loadPair( const char *line);
-  void addSiteNeighbor(struct siteInformation *site,
-	     struct siteInformation *neighbor);
+  void addSiteNeighbor(Site *site,Site *neighbor);
   double getRandomNumber();
   SiteType* findSiteType(char *name);
   SiteType* addSiteType(char *name);
-
-  struct pathTypeInformation*
-    findPathType(SiteType *type1
-		 , SiteType *type2);
-
-  struct pathTypeInformation* 
-    addPathType(SiteType *type1
-		, SiteType *type2);
+  PathType* findPathType(SiteType *type1, SiteType *type2);
 
   void countEvent(void);
    

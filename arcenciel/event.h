@@ -2,12 +2,14 @@
 #define ARC_EVENT_H
 
 /*---- イベント情報 ----*/
+#include "site.h"
+
 enum eventType{ DIFFUSION, ABSORPTION, DESORPTION };
 struct eventInformation{
   enum eventType type;
   double rate;
-  struct siteInformation *currentSite;
-  struct siteInformation *nextSite;
+  Site *currentSite;
+  Site *nextSite;
   struct particleInformation *particle;
 };
 

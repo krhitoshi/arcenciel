@@ -2,6 +2,7 @@
 #define ARC_SITE_H
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 #include "common.h"
@@ -10,8 +11,8 @@ using namespace std;
 class SiteType{
  private:
   static  int numSiteType;     /* サイトの種類の総数 */
-  int num;
-  string name;
+  int num;                     /* 番号 */
+  string name;                 /* 名前 */
  public:
   static int getNumSiteType(); /* サイトの種類の総数 */
   SiteType(string inName);
@@ -20,19 +21,37 @@ class SiteType{
   string getName();
 };
 
-
-/*---- サイトの状態 ----*/
-enum siteState {  UNOCCUPY, OCCUPY};
+class PathType;
 
 /*---- サイト情報 ----*/
-struct siteInformation{
-  unsigned long num;                /* 番号 */
-  SiteType *type; /* 種類 */
-  pos3D pos;                        /* 座標 */
-  enum siteState state;             /* 状態 */
-  int numNeighbor;                  /* 隣接するサイトの数 */
-  struct siteInformation **neighbor; /* 隣接するサイトのポインタの配列 */
-  struct pathTypeInformation **pathTypeToNeighbor;
+class Site{
+ public:
+  /*---- サイトの状態 ----*/
+  enum enumSiteState {UNOCCUPY, OCCUPY};
+ private:
+  static  int numSite;            /* サイトの総数 */
+
+  vector<Site*>     neighborVector;
+  vector<PathType*> pathTypeToNeighborVector;
+
+  unsigned long num;              /* 番号 */
+  SiteType     *type;             /* 種類 */
+  pos3D         pos;              /* 座標 */
+  enumSiteState state;            /* 状態 */
+  int           numNeighbor;    /* 隣接するサイトの数 */
+ public:
+  static int getNumSite();
+  Site(struct position3D inPos, SiteType *inType);
+  void clearVectors();
+  unsigned long getNum();
+  int  getNumNeighbor();
+  Site *getNeighbor(int index);
+  void setPathTypeToNeighbor(int index, PathType *inPathType);
+  PathType *getPathTypeToNeighbor(int index);
+  SiteType      *getType();
+  enumSiteState  getState();
+  void           setState(enumSiteState value);
+  void           addNeighbor(Site *inNeighbor, PathType *inPathType);
 };
 
 #endif
