@@ -3,6 +3,7 @@
 
 /*---- イベント情報 ----*/
 #include "site.h"
+#include "particle.h"
 
 enum eventType{ DIFFUSION, ABSORPTION, DESORPTION };
 struct eventInformation{
@@ -10,7 +11,7 @@ struct eventInformation{
   double rate;
   Site *currentSite;
   Site *nextSite;
-  struct particleInformation *particle;
+  Particle *particle;
 };
 
 #endif

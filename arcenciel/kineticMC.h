@@ -10,7 +10,6 @@
 #include "path.h"
 #include "event.h"
 
-
 class KineticMC{
  private:
   int    fileOutputInterval;
@@ -34,7 +33,7 @@ class KineticMC{
   vector<PathType> pathTypeVector;
 
   int numParticle;
-  struct particleInformation particle[MAX_NUM_PERTICLE];
+  vector<Particle> particleVector;
 
   unsigned long numEvent, numMaxEvent;
   struct eventInformation *event;

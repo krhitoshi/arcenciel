@@ -275,7 +275,7 @@ void KineticMC::putParticles(){
       (getRandomNumber()*siteVector.size());
     if(siteVector[random].getState()==Site::UNOCCUPY){
       siteVector[random].setState(Site::OCCUPY);
-      particle[i].site = &siteVector[random];
+      particleVector.push_back(&siteVector[random]);
     }else{
       i--;
     }
@@ -322,7 +322,7 @@ void KineticMC::mainLoop(){
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
     event[i].currentSite->setState(Site::UNOCCUPY);
     event[i].nextSite->setState(Site::OCCUPY);
-    event[i].particle->site = event[i].nextSite;
+    event[i].particle->setSite(event[i].nextSite);
 
     if(step!=0&&step%displayOutputInterval==0)
       printf ("%10d %10.5e\n",step,systemTime);
@@ -347,7 +347,7 @@ void  KineticMC::countEvent(){
   numEvent=0;
   sumRate=0.0;
   for(num=0;num<numParticle;num++){
-    sitePointer = particle[num].site;
+    sitePointer = particleVector[num].getSite();
     numNeighbor = sitePointer->getNumNeighbor();
     for (i=0; i< sitePointer->getNumNeighbor(); i++){
       if(sitePointer->getNeighbor(i)->getState()==Site::OCCUPY)
@@ -364,7 +364,7 @@ void  KineticMC::countEvent(){
 	sitePointer->getPathTypeToNeighbor(i)->getRate()/numNeighbor;
 
       sumRate += eventPointer->rate;
-      eventPointer->particle = &particle[num];
+      eventPointer->particle = &particleVector[num];
       eventPointer->currentSite = sitePointer;
       eventPointer->nextSite = sitePointer->getNeighbor(i);
     }
@@ -385,7 +385,7 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
     else if((i%10)==1) 
       fprintf (fp_out,"\n%5d ",(int)(step/fileOutputInterval));
     
-    fprintf (fp_out,"%5lu ",particle[i-1].site->getNum());
+    fprintf (fp_out,"%5lu ",particleVector[i-1].getSite()->getNum());
   }
   fprintf (fp_out,"\n");
   fflush(fp_out);
