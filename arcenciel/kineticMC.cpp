@@ -270,6 +270,7 @@ void KineticMC::loadRate(){
     if(line[0]=='#') continue; /* コメントアウト処理 */
     num = sscanf(line, "%s %s %lf %lf %lf",
 		 name1,name2,&frequency,&activEnergy,&distance);
+
     if ( num < 4 && !silentFlag)
       cout << "Wrong Format in " << rateFileName << "!" << endl;
 
@@ -280,7 +281,6 @@ void KineticMC::loadRate(){
 			    frequency,activEnergy,temperature));
     if(num == 5){
       pathTypeVector.back().twoSitesFlagOn();
-      pathTypeVector.back().setTwoSitesDistance(distance);
     }
 
   }

@@ -13,7 +13,6 @@ using namespace std;
 class PathType{
  private:
   bool          twoSitesFlag;  /* ≤ÚŒ•µ€√Â,∫∆∑ÎπÁ√¶Œ• */
-  double        twoSitesDistance;
   static    int numPathType;
   unsigned long numOccurrence;
   unsigned long lapOccurrence;
@@ -35,8 +34,6 @@ class PathType{
   bool      getTwoSitesFlag();
   void      twoSitesFlagOn();
   void      twoSitesFlagOff();
-  void      setTwoSitesDistance(double inDistance);
-  double    getTwoSitesDistance();
   void      printOccurrence();
   void      printOccurrence(ostream &stream);
   void      printLapOccurrence(ostream &stream);
