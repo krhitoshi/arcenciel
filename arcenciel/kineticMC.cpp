@@ -6,7 +6,6 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <sstream>
 using namespace std;
 
 #include "common.h"
@@ -16,7 +15,7 @@ using namespace std;
 /*************************************************/
 /*         プログラム名 バージョン               */
 /*************************************************/
-const char * const PROGRAM_NAME = "ARC ver. 0.35";
+const char * const PROGRAM_NAME = "ARC ver. 0.36";
 const char * const COPYRIGHT_STRING = 
 "Copyright (C) 2002-2004 Hitoshi Kurokawa";
 
@@ -25,7 +24,7 @@ KineticMC::KineticMC(){
 }
 
 /*-----------------------------------------------*/
-/*         プログラム名の表示                    */
+/*         メイン                                */
 /*-----------------------------------------------*/
 bool KineticMC::mainProcedure(){
   try{
@@ -67,14 +66,9 @@ void KineticMC::printProgramName(){
   cout << COPYRIGHT_STRING << endl;
 }
 
-void KineticMC::silentFlagOn(){
-  silentFlag = true;
-}
-
-void KineticMC::silentFlagOff(){
-  silentFlag = false;
-}
-
+/*-----------------------------------------------*/
+/*         パラメータの初期化                    */
+/*-----------------------------------------------*/
 void KineticMC::initialize(){
   seedType              = 0;
   timePoisson           = true;
@@ -93,6 +87,17 @@ void KineticMC::initialize(){
   pathFileName     = "path.kmc";
   rateFileName     = "rate.kmc";
   particleFileName = "particle.kmc";
+}
+
+/*-----------------------------------------------*/
+/*         標準出力の設定                        */
+/*-----------------------------------------------*/
+void KineticMC::silentFlagOn(){
+  silentFlag = true;
+}
+
+void KineticMC::silentFlagOff(){
+  silentFlag = false;
 }
 
 /*-----------------------------------------------*/
@@ -135,10 +140,9 @@ void KineticMC::loadInputFile(){
     }else if(!(intFlag || doubleFlag || charFlag)){
       string lineString = line;
       lineString.erase(lineString.size()-1,1);
-      stringstream error;
-      error << "Invalid Line ["  << countLine << "]: '" 
-	  << lineString << "'";
-      throw(string(error.str()));
+      char error[LINE];
+      sprintf(error,"Invalid Line [%d]: %s",countLine,lineString.c_str());
+      throw(string(error));
     }
   
     
@@ -514,7 +518,6 @@ void KineticMC::createPathToExternalPhase(){
 /*-----------------------------------------------*/
 /*         メインループ                          */
 /*-----------------------------------------------*/
-
 void KineticMC::mainLoop(){
   int step;
   long double eventRandom;
