@@ -866,10 +866,9 @@ void KineticMC::printRateInformation(){
 void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
   fprintf (fp_time,"%10d %10.5e %10.5e\n",
 	   step,systemTime,lapSystemTime);
-  fflush(fp_time);
+  //  fflush(fp_time);
 
   vector<Particle>::size_type i;
-
   for(i=0;i<particleVector.size();i++){
     if(i==0) fprintf (fp_out,"%5d ",(int)(step/fileOutputInterval));
     else if((i%10)==0) 
@@ -878,7 +877,8 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
     fprintf (fp_out,"%5lu ",particleVector[i].getSite());
   }
   fprintf (fp_out,"\n");
-  fflush(fp_out);
+
+  //  fflush(fp_out);
 }
 
 void KineticMC::printOccurrence(int step, ostream &stream){
