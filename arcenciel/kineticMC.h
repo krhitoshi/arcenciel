@@ -31,6 +31,7 @@ class KineticMC{
 
  public:
   KineticMC();
+  void printProgramName();
   void loadInputFile();
   void printInputData();
   void loadSite();

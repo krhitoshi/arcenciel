@@ -7,7 +7,7 @@
 /*************************************************/
 /*         プログラム名 バージョン               */
 /*************************************************/
-const char * const PROGRAM_NAME = "Qtmomonga ver. 0.936";
+const char * const PROGRAM_NAME = "ARC ver. 0.11";
 
 const int LINE       = 1024;
 const int NAME_LIMIT = 10;

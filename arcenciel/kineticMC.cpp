@@ -13,6 +13,11 @@ KineticMC::KineticMC(){
   initialize();
 }
 
+void KineticMC::printProgramName(){
+  cout << PROGRAM_NAME << endl;
+  cout << "Copyright (C) 2002-2003 Hitoshi Kurokawa" << endl;
+}
+
 void KineticMC::initialize(){
   numParticle = NUM_PERTICLE;
 

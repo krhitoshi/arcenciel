@@ -16,10 +16,9 @@
 /*         еседеє                                */
 /*************************************************/
 int main(){
-  int i;
-  unsigned long random;
 
   KineticMC arc;
+  arc.printProgramName();
   arc.loadInputFile();
   arc.printInputData();
   arc.loadSite();
