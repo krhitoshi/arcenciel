@@ -754,7 +754,7 @@ void KineticMC::printOccurrence(int step, ostream &stream){
     type1 = pathTypeVector[i].getSiteType1();
     type2 = pathTypeVector[i].getSiteType2();
     if(step==0){
-      sprintf(name,"%s-%s",siteTypeVector[type1].getName().c_str()
+      sprintf(name," %s-%s",siteTypeVector[type1].getName().c_str()
 	      ,siteTypeVector[type2].getName().c_str());
 	stream << name;
     }else{

@@ -2,8 +2,8 @@ EXECUTABLES = arc
 CC = g++
 #OBJS_FLAGS  = -pg -O3 -Wall -ansi -m386 
 #CXXFLAGS    = -pg -O3 -Wall -ansi -m386 
-OBJS_FLAGS  = -O3 -Wall -ansi -m386 
-CXXFLAGS    = -O3 -Wall -ansi -m386 
+OBJS_FLAGS  = -O3 -Wall -ansi -march=i686
+CXXFLAGS    = -O3 -Wall -ansi -march=i686
 OBJS = main.o kineticMC.o site.o path.o particle.o event.o
 kmc : $(OBJS)
 	$(CC) -o $(EXECUTABLES) $(OBJS) $(CXXFLAGS) -lm -static
