@@ -23,7 +23,7 @@ class KineticMC{
   struct pathTypeInformation *pathType;
 
   int numParticle;
-  struct particleInformation particle[NUM_PERTICLE];
+  struct particleInformation particle[MAX_NUM_PERTICLE];
 
   unsigned long numEvent, numMaxEvent;
   struct eventInformation *event;

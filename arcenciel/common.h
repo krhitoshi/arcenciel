@@ -3,6 +3,8 @@
 
 #include "constants.h"
 
+#define MAX_NUM_PERTICLE 1000
+
 /*---- 座標 ----*/
 typedef struct position3D{
   float x,y,z;
@@ -53,33 +55,6 @@ struct eventInformation{
   struct siteInformation *currentSite;
   struct siteInformation *nextSite;
   struct particleInformation *particle;
-};
-
-/*---- 基本情報 ----*/
-struct basicInformation{
-  int outputInterval;
-  int numStep;
-
-  cellPara cell;
-  unsigned long numSite;
-  struct siteInformation *site;
-
-  int siteTypeNum, siteTypeNumMax;
-  struct siteTypeInformation *siteType;
-
-  unsigned long numPath;
-
-  int pathTypeNum, pathTypeNumMax;
-  struct pathTypeInformation *pathType;
-
-  int numParticle;
-  struct particleInformation particle[NUM_PERTICLE];
-
-  unsigned long numEvent, numMaxEvent;
-  struct eventInformation *event;
-  long double sumRate;
-
-  double temperature, time; /* 温度、 時間 */
 };
 
 #include "functions.h"

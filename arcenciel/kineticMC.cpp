@@ -19,8 +19,7 @@ void KineticMC::printProgramName(){
 }
 
 void KineticMC::initialize(){
-  numParticle = NUM_PERTICLE;
-
+  numParticle           = 1;
   fileOutputInterval    = 50;
   displayOutputInterval = 10000;
   numStep               = 200000;
@@ -68,6 +67,8 @@ void KineticMC::loadInputFile(){
       fileOutputInterval = value;
     else if(!strcmp(key,"displayInterval")) 
       displayOutputInterval = value;
+    else if(!strcmp(key,"bulkParticle")) 
+      numParticle = value;
     else if(!strcmp(key,"step"))        numStep            = value;
     else if(!strcmp(key,"temperature")) temperature        = value;
     else
@@ -82,6 +83,7 @@ void KineticMC::loadInputFile(){
 void KineticMC::printInputData(){
   cout << "Step                    : " << numStep << endl;
   cout << "Temperature             : " << temperature << endl;
+  cout << "Number of Particle      : " << numParticle << endl;
   cout << "File    Output Interval : " << fileOutputInterval << endl;
   cout << "Display Output Interval : " << displayOutputInterval << endl;
 }
@@ -247,9 +249,11 @@ void KineticMC::putParticles(){
     if(site[random].state==UNOCCUPY){
       site[random].state=OCCUPY;
       particle[i].site = &site[random];
+    }else{
+      i--;
     }
   }
- 
+
 }
 
 /*-----------------------------------------------*/
@@ -271,10 +275,9 @@ void KineticMC::mainLoop(){
   /*---- ループスタート ----*/
   cout << "  STEP      TIME\n";
   for(step=1;step<numStep+1;step++){
-    
     countEvent();
     eventRandom = (double)rand()/(double)RAND_MAX*sumRate;
-    /*      printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
+    /* printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
     for(i=0;i<numEvent;i++){
       eventRandom -= event[i].rate;
       if(eventRandom < 0.0) break;
@@ -343,7 +346,8 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
   
   for(i=1;i<numParticle+1;i++){
     if(i==1) fprintf (fp_out,"%5d ",(int)(step/fileOutputInterval));
-    else if((i%10)==1) fprintf (fp_out,"\n%5d ",(int)(step/fileOutputInterval));
+    else if((i%10)==1) 
+      fprintf (fp_out,"\n%5d ",(int)(step/fileOutputInterval));
     
     fprintf (fp_out,"%5lu ",particle[i-1].site->num);
   }
