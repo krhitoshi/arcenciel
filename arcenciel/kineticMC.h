@@ -55,6 +55,9 @@ class KineticMC{
   void loadSiteType();
   void putParticles();
   void mainLoop();
+  
+  void checkTopSurface();
+  void checkButtomSurface();
 
   void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
   void loadNumSite( const char *line);

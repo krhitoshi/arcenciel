@@ -290,16 +290,25 @@ void KineticMC::loadSiteType(){
 }
 
 void KineticMC::putParticles(){
-  int i;
-  unsigned long random;
-   for(i=0;i<numParticle;i++){
-    random = (unsigned long)
-      (getRandomNumber()*siteVector.size());
-    if(siteVector[random].getState()==Site::UNOCCUPY){
-      siteVector[random].setState(Site::OCCUPY);
-      particleVector.push_back(&siteVector[random]);
-    }else{
-      i--;
+  if(numParticle!=0){
+    int i;
+    unsigned long random;
+    for(i=0;i<numParticle;i++){
+      random = (unsigned long)
+	(getRandomNumber()*siteVector.size());
+      if(siteVector[random].getState()==Site::UNOCCUPY){
+	particleVector.push_back(&siteVector[random]);
+      }else{
+	i--;
+      }
+    }
+  }else{
+    vector<Site>::iterator iter;
+    iter = siteVector.begin();
+    while(iter!=siteVector.end()){
+      if((iter->getType())->getName()==string("To"))
+	particleVector.push_back(&(*iter));
+       iter++;
     }
   }
 
@@ -322,10 +331,58 @@ void KineticMC::mainLoop(){
 
   printIntervalOutput(0,fp_out, fp_time);
 
+  int numTopSite=0;
+  vector<Site>::iterator iter;
+  iter = siteVector.begin();
+  while(iter!=siteVector.end()){
+    if((iter->getType())->getName()==string("To")) numTopSite++;
+      iter++;
+  }
+
+
   /*---- ループスタート ----*/
   cout << "  STEP      TIME\n";
   for(step=1;step<numStep+1;step++){
     if(eventVector.size()!=0) eventVector.clear();
+    
+    int numParticleOnTopSite=0, delta;
+    vector<Particle>::iterator iter;
+    iter = particleVector.begin();
+    while(iter!=particleVector.end()){
+      if(iter->getSite()->getType()->getName()==string("To")){
+	numParticleOnTopSite++;
+      }
+       iter++;
+    }
+
+    if(step%100==0){
+    delta = numTopSite*0.5 - numParticleOnTopSite;
+
+    if(delta<0){
+      int i;
+      for(i=0;i<delta;i++){
+	vector<Particle>::iterator iter;
+	iter = particleVector.begin();
+	while(delta<0){
+	  if(iter->getSite()->getType()->getName()==string("To"));
+	    particleVector.erase(iter);
+	    delta++;
+	  }
+	  iter++;
+	}
+    }else if(delta>0){
+      vector<Site>::iterator iter;
+      iter = siteVector.begin();
+      while(delta>0){
+	if(iter->getType()->getName()==string("To")&&
+	   iter->getState()==Site::UNOCCUPY){
+	  particleVector.push_back(&(*iter));
+	  delta--;
+	}
+	iter++;
+      }
+    }
+    }
     countEvent();
     eventRandom = getRandomNumber()*sumRate;
     /* printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
@@ -343,9 +400,33 @@ void KineticMC::mainLoop(){
 
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
     eventVector[i].occur();
+    /*    if(eventVector[i].getCurrentSite()->getType()->getName()
+       ==string("To") &&
+       eventVector[i].getNextSite()->getType()->getName()
+       !=string("To") ){
+      double r = getRandomNumber();
+      //      cout << r << endl;
+      if(r<0.8)
+      	particleVector.push_back(eventVector[i].getCurrentSite());
+	}*/
 
-    if(step!=0&&step%displayOutputInterval==0)
-      printf ("%10d %10.5e\n",step,systemTime);
+    if(eventVector[i].getNextSite()->getType()->getName()
+       ==string("Bu") ){
+      vector<Particle>::iterator iter;
+      iter = particleVector.begin();
+      while(iter!=particleVector.end()){
+	if( &(*iter) == eventVector[i].getParticle()){
+	  particleVector.erase(iter);
+	  break;
+	}
+	iter++;
+      }
+    }
+
+    if(step!=0&&step%displayOutputInterval==0){
+      printf ("%10d %10.5e ",step,systemTime);
+      cout << particleVector.size() << endl;
+    }
 
     if(step!=0&&step%fileOutputInterval==0)
       printIntervalOutput(step,fp_out, fp_time);
@@ -402,16 +483,17 @@ void  KineticMC::countEvent(){
 /*         入力情報の出力                        */
 /*-----------------------------------------------*/
 void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
-  int i;
   fprintf (fp_time,"%10d %10.5e\n",step,systemTime);
   fflush(fp_time);
-  
-  for(i=1;i<numParticle+1;i++){
-    if(i==1) fprintf (fp_out,"%5d ",(int)(step/fileOutputInterval));
-    else if((i%10)==1) 
+
+  vector<Particle>::size_type i;
+
+  for(i=0;i<particleVector.size();i++){
+    if(i==0) fprintf (fp_out,"%5d ",(int)(step/fileOutputInterval));
+    else if((i%10)==0) 
       fprintf (fp_out,"\n%5d ",(int)(step/fileOutputInterval));
     
-    fprintf (fp_out,"%5lu ",particleVector[i-1].getSite()->getNum());
+    fprintf (fp_out,"%5lu ",particleVector[i].getSite()->getNum());
   }
   fprintf (fp_out,"\n");
   fflush(fp_out);
