@@ -35,8 +35,7 @@ class KineticMC{
   int numParticle;
   vector<Particle> particleVector;
 
-  unsigned long numEvent, numMaxEvent;
-  struct eventInformation *event;
+  vector<Event>    eventVector;
   long double sumRate;
 
   void fatalError(string message);

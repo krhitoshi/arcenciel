@@ -59,11 +59,6 @@ void KineticMC::initialize(){
 
   systemTime = 0.0;
 
-  numMaxEvent = 100000;
-  event = (struct eventInformation *)
-    calloc(numMaxEvent,sizeof(struct eventInformation));
-  if(event==NULL) 
-    fatalError("Cannot allocate memory for the events!");
 
 }
 
@@ -291,7 +286,7 @@ void KineticMC::mainLoop(){
   FILE *fp_out, *fp_time;
   long double eventRandom;
   int step;
-  unsigned int i;  
+  vector<Event>::size_type i;  
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
     fileOpenError("out.kmc");
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
@@ -304,12 +299,13 @@ void KineticMC::mainLoop(){
   /*---- ループスタート ----*/
   cout << "  STEP      TIME\n";
   for(step=1;step<numStep+1;step++){
+    if(eventVector.size()!=0) eventVector.clear();
     countEvent();
     eventRandom = getRandomNumber()*sumRate;
     /* printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
     //    cout << "Randnum " << eventRandom << endl;
-    for(i=0;i<numEvent;i++){
-      eventRandom -= event[i].rate;
+    for(i=0;i<eventVector.size();i++){
+      eventRandom -= eventVector[i].getRate();
       if(eventRandom < 0.0) break;
     }
 
@@ -320,9 +316,10 @@ void KineticMC::mainLoop(){
     }
 
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
-    event[i].currentSite->setState(Site::UNOCCUPY);
-    event[i].nextSite->setState(Site::OCCUPY);
-    event[i].particle->setSite(event[i].nextSite);
+    eventVector[i].getCurrentSite()->setState(Site::UNOCCUPY);
+    eventVector[i].getNextSite()->setState(Site::OCCUPY);
+    eventVector[i].getParticle()
+      ->setSite(eventVector[i].getNextSite());
 
     if(step!=0&&step%displayOutputInterval==0)
       printf ("%10d %10.5e\n",step,systemTime);
@@ -343,9 +340,8 @@ void  KineticMC::countEvent(){
   int num,i;
   int numNeighbor;
   Site *sitePointer;
-  struct eventInformation *eventPointer;
-  numEvent=0;
   sumRate=0.0;
+  double rate=0.0;
   for(num=0;num<numParticle;num++){
     sitePointer = particleVector[num].getSite();
     numNeighbor = sitePointer->getNumNeighbor();
@@ -357,16 +353,15 @@ void  KineticMC::countEvent(){
       if(sitePointer->getNeighbor(i)->getState()==Site::OCCUPY)
 	continue;
 
-      numEvent++;
-      eventPointer = &event[numEvent-1];
 
-      eventPointer->rate = 
+      rate = 
 	sitePointer->getPathTypeToNeighbor(i)->getRate()/numNeighbor;
 
-      sumRate += eventPointer->rate;
-      eventPointer->particle = &particleVector[num];
-      eventPointer->currentSite = sitePointer;
-      eventPointer->nextSite = sitePointer->getNeighbor(i);
+      eventVector.push_back(Event(rate,&particleVector[num],
+			  sitePointer,sitePointer->getNeighbor(i)));
+
+      sumRate += rate;
+
     }
   }
 }
@@ -520,6 +515,8 @@ PathType*  KineticMC::findPathType(SiteType *type1,SiteType *type2){
   }
   printf ("Cannot find!! path type %s %s\n",
 	  type1->getName().c_str(),type2->getName().c_str());
+  fatalError("Exit!");
+
   return NULL;
 }
 
@@ -539,4 +536,5 @@ void KineticMC::clearVectors(){
   siteVector.clear();
   siteTypeVector.clear();
   pathTypeVector.clear();
+  eventVector.clear();
 }

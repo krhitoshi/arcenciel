@@ -5,13 +5,22 @@
 #include "site.h"
 #include "particle.h"
 
-enum eventType{ DIFFUSION, ABSORPTION, DESORPTION };
-struct eventInformation{
-  enum eventType type;
+class Event{
+ public:
+  enum enumEventType{ DIFFUSION, ABSORPTION, DESORPTION };
+ private:
+  enumEventType type;
   double rate;
+  Particle *particle;
   Site *currentSite;
   Site *nextSite;
-  Particle *particle;
+ public:
+  Event(double inRate, Particle *inParticle,
+	Site *inCurrentSite, Site *inNextSite);
+  double    getRate();
+  Particle *getParticle();
+  Site     *getCurrentSite();
+  Site     *getNextSite();
 };
 
 #endif
