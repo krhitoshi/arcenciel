@@ -78,7 +78,7 @@ void KineticMC::initialize(){
   seedType              = 0;
   timePoisson           = true;
   silentFlag            = false;
-  numParticle           = 1;
+  initialNumParticle           = 1;
   fileOutputInterval    = 50;
   displayOutputInterval = 10000;
   numStep               = 200000;
@@ -88,6 +88,7 @@ void KineticMC::initialize(){
   systemTime    = 0.0;
   lapSystemTime = 0.0;
 
+  /* 入力ファイル名 */
   siteFileName = "site.kmc";
   pathFileName = "path.kmc";
   rateFileName = "rate.kmc";
@@ -99,9 +100,10 @@ void KineticMC::initialize(){
 void KineticMC::loadInputFile(){
   FILE *fp;
   string fileName="input.kmc";
-  char line[LINE], key[LINE];
+  char   line[LINE], key[LINE];
   string keyString,valueString;
-  int num, count;
+  bool   keyFlag, intFlag, doubleFlag, charFlag; 
+  int    countLine;
   int    intValue; 
   double doubleValue;
   char   charValue[LINE];
@@ -111,26 +113,29 @@ void KineticMC::loadInputFile(){
     throw(error);
   }
   
-  count = 1;
+  countLine = 1;
   while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue;
-    num = sscanf(line,"%s %d",key,&intValue);
+    if(line[0]=='#') continue; /* コメントアウト処理 */
+    keyFlag=intFlag=doubleFlag=charFlag=false;
+
+    if(sscanf(line,"%s",key)==1) keyFlag=true;
     keyString = key;
-    sscanf(line,"%*s %lf",&doubleValue);
-    sscanf(line,"%*s %s",charValue);
+    if(sscanf(line,"%*s %d" ,&intValue)   ==1) intFlag    = true;
+    if(sscanf(line,"%*s %lf",&doubleValue)==1) doubleFlag = true;
+    if(sscanf(line,"%*s %s" ,charValue)   ==1) charFlag   = true;
     valueString = charValue;
 
-    if(num<1){
+    if(!keyFlag){
       if(!silentFlag)
-	cout << "Empty Line [" << count <<"]:" << fileName << endl;
-
-      count++;
+	cout << "Empty Line [" << countLine <<"]:"
+	     << fileName << endl;
+      countLine++;
       continue;
-    }else if(num==1 || num > 2){
+    }else if(!(intFlag || doubleFlag || charFlag)){
       string lineString = line;
       lineString.erase(lineString.size()-1,1);
       stringstream error;
-      error << "Invalid Line ["  << count << "]: '" 
+      error << "Invalid Line ["  << countLine << "]: '" 
 	  << lineString << "'";
       throw(string(error.str()));
     }
@@ -141,7 +146,7 @@ void KineticMC::loadInputFile(){
     }else if(keyString == "displayInterval"){
       displayOutputInterval = intValue;
     }else if(keyString == "bulkParticle"){
-      numParticle = intValue;
+      initialNumParticle = intValue;
     }else if(keyString == "step"){
       numStep            = intValue;
     }else if(keyString == "temperature"){
@@ -153,12 +158,18 @@ void KineticMC::loadInputFile(){
 	timePoisson = true;
     }else if(keyString == "seed"){
       seedType = intValue;
+    }else if(keyString == "siteFile"){
+      siteFileName = valueString;
+    }else if(keyString == "pathFile"){
+      pathFileName = valueString;
+    }else if(keyString == "rateFile"){
+      rateFileName = valueString;
     }else{
       string error = "Unknown Keyword!: ";
       error += key;
       throw(error);
     }
-    count++;
+    countLine++;
   }
 
   if(seedType==0){
@@ -178,9 +189,6 @@ void KineticMC::loadSite(){
   char line[LINE];
   int count;
 
-  if(!silentFlag)
-    cout << "loading " << siteFileName << "..." << endl;
-
   loadSiteType();
   if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ) {
     string error = "Cannot Find! " + siteFileName;
@@ -189,6 +197,8 @@ void KineticMC::loadSite(){
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue; /* コメントアウト処理 */
+
     if( count == 1 )
       ;
     else if( count == 2 )
@@ -219,12 +229,11 @@ void KineticMC::loadRate(){
     }
 
   while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue; /* コメントアウト処理 */
     num = sscanf(line, "%s %s %lf %lf %lf",
 		 name1,name2,&frequency,&activEnergy,&distance);
     if ( num < 4 && !silentFlag)
       cout << "Wrong Format in " << rateFileName << "!" << endl;
-    if(!silentFlag)
-      cout << name1 << " " << name2 << endl;
 
     siteType1 = findSiteTypeNoAppend(name1);
     siteType2 = findSiteTypeNoAppend(name2);
@@ -255,6 +264,8 @@ void KineticMC::loadPath(){
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue; /* コメントアウト処理 */
+
     if( count == 1 )
       ;
     else
@@ -283,7 +294,7 @@ void KineticMC::printInputData(){
   if(silentFlag) return;
   cout << "Step                     : " << numStep << endl;
   cout << "Temperature              : " << temperature << endl;
-  cout << "Number of Bulk Particles : " << numParticle << endl;
+  cout << "Number of Bulk Particles : " << initialNumParticle << endl;
   cout << "File    Output Interval  : " << fileOutputInterval << endl;
   cout << "Display Output Interval  : " << displayOutputInterval << endl;
 }
@@ -425,6 +436,8 @@ void KineticMC::loadSiteType(){
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue; /* コメントアウト処理 */
+
     if( count == 1 || count == 2){
       count++;
       continue;
@@ -448,7 +461,7 @@ void KineticMC::loadSiteType(){
 void KineticMC::putParticles(){
   int i;
   unsigned long random;
-  for(i=0;i<numParticle;i++){
+  for(i=0;i<initialNumParticle;i++){
     random = (unsigned long)
       (getRandomNumber()*siteVector.size());
     if(siteVector[random].getState()==Site::UNOCCUPY){
@@ -847,8 +860,6 @@ SiteType*  KineticMC::findSiteType(char *name){
     if(string(name) == siteTypeVector[i].getName()) 
       return &siteTypeVector[i];
   }
-  if(!silentFlag)
-    cout << "Adding a new site type" << endl;
   return addSiteType(name);  
 }
 

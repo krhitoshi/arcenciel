@@ -10,8 +10,8 @@ using namespace std;
 /*---- サイトの種類 ----*/
 class SiteType{
  private:
-  static  int numSiteType;     /* サイトの種類の総数 */
-  int num;                     /* 番号 */
+  static int numSiteType;     /* サイトの種類の総数 */
+  int    num;                     /* 番号 */
   string name;                 /* 名前 */
  public:
   static int getNumSiteType(); /* サイトの種類の総数 */

@@ -1,6 +1,9 @@
 #include "site.h"
 
-int SiteType::numSiteType;
+
+/*---- static 変数 ----*/
+int SiteType::numSiteType;     /* サイトの種類の総数 */
+int Site::numSite;             /* サイトの総数 */
 
 SiteType::SiteType(string inName){
   num = numSiteType;
@@ -23,8 +26,6 @@ string SiteType::getName(){
 void   SiteType::setName(string value){
   name = value;
 }
-
-int Site::numSite;
 
 Site::Site(struct position3D inPos, SiteType *inType){
   num  = numSite;

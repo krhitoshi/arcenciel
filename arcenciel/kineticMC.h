@@ -30,41 +30,39 @@ class SitePair{
 
 class KineticMC{
  private:
-  ofstream stdoutFile;
-  int    fileOutputInterval;
-  int    displayOutputInterval;
-  int    numStep;
-  double temperature; /* 温度 */
+  int    fileOutputInterval;         /* ファイル出力インターバル */
+  int    displayOutputInterval;      /* 標準出力インターバル */
+  int    numStep;                    /* ステップ数 */
+  double temperature;                /* 温度 */
   double systemTime, lapSystemTime;  /* 時間 */
+  int    initialNumParticle;         /* 初期粒子数 */
+  long double sumRate;
 
   bool timePoisson;
   bool silentFlag;   /* 標準出力の有無 */
 
-  int seedType;
-  cellPara cell;
+  int seedType;      /* 乱数の種 (0ならば時間を種とする)*/
+  cellPara cell;     /* セルパラメータ */
 
-  vector<Site>     siteVector;
+
+  vector<Site>     siteVector;      /* サイト情報 */
+  vector<SiteType> siteTypeVector;  /* サイト種情報 */
+
   vector<Site*>    adsorptionSiteVector;
   vector<Site*>    desorptionSiteVector;
   vector<SitePair> dissosiativeAdsorptionSiteVector;
   vector<SitePair> recombinativeDesorptionSiteVector;
 
-  vector<SiteType> siteTypeVector;
+  vector<PathType> pathTypeVector;  /* パス種情報 */
 
-  unsigned long numPath;
-  vector<PathType> pathTypeVector;
+  vector<Particle> particleVector;  /* 粒子情報   */
 
-  int numParticle;
-  vector<Particle> particleVector;
+  vector<Event>    eventVector;     /* イベント情報 */
 
-  vector<Event>    eventVector;
-  long double sumRate;
-
-  /* ファイル名 */
+  /* 入力ファイル名 */
   string siteFileName;
   string pathFileName;
   string rateFileName;
-
 
  public:
   KineticMC();
