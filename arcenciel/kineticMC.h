@@ -35,7 +35,6 @@ class KineticMC{
   int    numStep;                    /* ステップ数 */
   double temperature;                /* 温度 */
   double systemTime, lapSystemTime;  /* 時間 */
-  int    initialNumParticle;         /* 初期粒子数 */
   long double sumRate;
 
   bool timePoisson;
@@ -63,6 +62,7 @@ class KineticMC{
   string siteFileName;
   string pathFileName;
   string rateFileName;
+  string particleFileName;
 
  public:
   KineticMC();
@@ -90,6 +90,7 @@ class KineticMC{
 
   void loadInputFile();
   void loadSite();
+  void loadParticle();
   void loadPath();
   void loadRate();
   void loadSiteType();
@@ -98,7 +99,6 @@ class KineticMC{
   void loadCoordination( const char *line);
   void loadPair( const char *line);
 
-  void putParticles();
   void countEvent();
   
   void checkTopSurface();

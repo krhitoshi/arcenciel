@@ -16,7 +16,7 @@ using namespace std;
 /*************************************************/
 /*         プログラム名 バージョン               */
 /*************************************************/
-const char * const PROGRAM_NAME = "ARC ver. 0.34";
+const char * const PROGRAM_NAME = "ARC ver. 0.35";
 const char * const COPYRIGHT_STRING = 
 "Copyright (C) 2002-2004 Hitoshi Kurokawa";
 
@@ -33,6 +33,7 @@ bool KineticMC::mainProcedure(){
 
     loadInputFile(); 
 
+    loadSiteType();
     loadSite();
     printSiteInformation();
 
@@ -43,7 +44,7 @@ bool KineticMC::mainProcedure(){
     createPathToExternalPhase();    
 
     printInputData();
-    putParticles();
+    loadParticle();
 
     mainLoop();
   }
@@ -78,7 +79,6 @@ void KineticMC::initialize(){
   seedType              = 0;
   timePoisson           = true;
   silentFlag            = false;
-  initialNumParticle           = 1;
   fileOutputInterval    = 50;
   displayOutputInterval = 10000;
   numStep               = 200000;
@@ -89,9 +89,10 @@ void KineticMC::initialize(){
   lapSystemTime = 0.0;
 
   /* 入力ファイル名 */
-  siteFileName = "site.kmc";
-  pathFileName = "path.kmc";
-  rateFileName = "rate.kmc";
+  siteFileName     = "site.kmc";
+  pathFileName     = "path.kmc";
+  rateFileName     = "rate.kmc";
+  particleFileName = "particle.kmc";
 }
 
 /*-----------------------------------------------*/
@@ -145,8 +146,6 @@ void KineticMC::loadInputFile(){
       fileOutputInterval = intValue;
     }else if(keyString == "displayInterval"){
       displayOutputInterval = intValue;
-    }else if(keyString == "bulkParticle"){
-      initialNumParticle = intValue;
     }else if(keyString == "step"){
       numStep            = intValue;
     }else if(keyString == "temperature"){
@@ -182,6 +181,46 @@ void KineticMC::loadInputFile(){
 }
 
 /*-----------------------------------------------*/
+/*         site種情報の読み込み site.kmc         */
+/*-----------------------------------------------*/
+void KineticMC::loadSiteType(){
+  FILE *fp;
+  char line[LINE];
+  int count;
+  char name[LINE];
+  int num;
+  SiteType *siteType;
+  
+  if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + siteFileName;
+    throw(error);
+  }
+
+  count=1;
+  while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue; /* コメントアウト処理 */
+
+    if( count == 1 || count == 2){
+      count++;
+      continue;
+    }else{
+      num = sscanf(line, "%s",name);
+      if ( num != 1 && !silentFlag)
+	cout << "Wrong coordination!!" << endl;
+      
+      if(SiteType::getNumSiteType()==0){
+	siteType = addSiteType(name);
+      }else{
+	siteType = findSiteType(name);
+      }
+      
+    }
+    count++;
+  }
+  fclose(fp);
+}
+
+/*-----------------------------------------------*/
 /*         site情報の読み込み site.kmc           */
 /*-----------------------------------------------*/
 void KineticMC::loadSite(){
@@ -189,7 +228,6 @@ void KineticMC::loadSite(){
   char line[LINE];
   int count;
 
-  loadSiteType();
   if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ) {
     string error = "Cannot Find! " + siteFileName;
     throw(error);
@@ -288,13 +326,68 @@ void KineticMC::loadPath(){
 }
 
 /*-----------------------------------------------*/
+/*       粒子初期配置情報の読み込み particle.kmc */
+/*-----------------------------------------------*/
+void KineticMC::loadParticle(){
+  FILE *fp;
+  char line[LINE];
+  int count;
+
+  if( ( fp = fopen( particleFileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + particleFileName;
+    throw(error);
+  }
+
+  char   key[LINE];
+  string keyString;
+  unsigned long site[10];
+  int    num, i;
+  unsigned long j;
+  count=1;
+  while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue; /* コメントアウト処理 */
+    sscanf(line,"%s",key);
+    keyString = key;
+
+    if(keyString=="Random"){  /* ランダムに粒子を配置 */
+      unsigned long numRandomParticle;
+      unsigned long random;
+      sscanf(line,"%*s %*s %lu",&numRandomParticle);
+      for(j=0;j<numRandomParticle;j++){
+	random = (unsigned long)
+	  (getRandomNumber()*siteVector.size());
+	if(siteVector[random].getState()==Site::UNOCCUPY){
+	  particleVector.push_back(&siteVector[random]);
+	}else{
+	  j--;
+	}
+      }
+    }else{                   /* 特定サイトに粒子を配置 */
+      num = sscanf(line,"%*s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
+		   &site[0],&site[1],&site[2],&site[3],&site[4],
+		   &site[5],&site[6],&site[7],&site[8],&site[9]);
+      for(i=0; i<num; i++){
+	if(siteVector[site[i]].getState()==Site::UNOCCUPY){
+	  particleVector.push_back(&siteVector[site[i]]);
+	}else{
+	  char error[LINE];
+	  sprintf(error,"Site[%lu] is already occupied!",site[i]); 
+	  throw(string(error));
+	}
+      }
+    }
+    
+    count++;
+  }
+}
+
+/*-----------------------------------------------*/
 /*         入力情報の出力                        */
 /*-----------------------------------------------*/
 void KineticMC::printInputData(){
   if(silentFlag) return;
   cout << "Step                     : " << numStep << endl;
   cout << "Temperature              : " << temperature << endl;
-  cout << "Number of Bulk Particles : " << initialNumParticle << endl;
   cout << "File    Output Interval  : " << fileOutputInterval << endl;
   cout << "Display Output Interval  : " << displayOutputInterval << endl;
 }
@@ -416,69 +509,6 @@ void KineticMC::createPathToExternalPhase(){
     cout << "Recombinative Desorption Sites "
 	 << recombinativeDesorptionSiteVector.size() << endl;
   }
-}
-
-/*-----------------------------------------------*/
-/*         site種情報の読み込み site.kmc         */
-/*-----------------------------------------------*/
-void KineticMC::loadSiteType(){
-  FILE *fp;
-  char line[LINE];
-  int count;
-  char name[LINE];
-  int num;
-  SiteType *siteType;
-  
-  if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ){
-    string error = "Cannot Find! " + siteFileName;
-    throw(error);
-  }
-
-  count=1;
-  while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* コメントアウト処理 */
-
-    if( count == 1 || count == 2){
-      count++;
-      continue;
-    }else{
-      num = sscanf(line, "%s",name);
-      if ( num != 1 && !silentFlag)
-	cout << "Wrong coordination!!" << endl;
-      
-      if(SiteType::getNumSiteType()==0){
-	siteType = addSiteType(name);
-      }else{
-	siteType = findSiteType(name);
-      }
-      
-    }
-    count++;
-  }
-  fclose(fp);
-}
-
-void KineticMC::putParticles(){
-  int i;
-  unsigned long random;
-  for(i=0;i<initialNumParticle;i++){
-    random = (unsigned long)
-      (getRandomNumber()*siteVector.size());
-    if(siteVector[random].getState()==Site::UNOCCUPY){
-      particleVector.push_back(&siteVector[random]);
-    }else{
-      i--;
-    }
-  }
-
-  /*  vector<Site>::iterator iter;
-  iter = siteVector.begin();
-  while(iter!=siteVector.end()){
-    if((iter->getType())->getName()==string("To"))
-      particleVector.push_back(&(*iter));
-    iter++;
-    }*/
-
 }
 
 /*-----------------------------------------------*/
