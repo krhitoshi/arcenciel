@@ -1,165 +1,11 @@
-/*****************************************************************************/
-/*                Kinetic Monte Carlo Program                                */
-/*                                                                           */
-/*             Copyright (C) 2002 Hitoshi Kurokawa                           */
-/*****************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+#include "common.h"
 
-#define LINE       1024
-#define NAME_LIMIT 10
-
-#define AVOGADRO_CONST  6.0221367e23 /* [/mol] */
-#define BOLTZMANN_CONST 1.380658e-23 /* [J/K] */
-#define ELECTRONVOLT_TO_JOULE_PER_MOL 9.648531e4 /* [eV] -> [J/mol] */
-#define GAS_CONST AVOGADRO_CONST*BOLTZMANN_CONST /* [J/(mol*K)] */
-void fileOpenError(char *fileName);
-void fatalError(char *string);
-
-/*---- 座標 ----*/
-typedef struct position3D{
-  float x,y,z;
-}pos3D;
-
-/*---- セルパラメーター ----*/
-typedef struct cellParameters{
-  float a,b,c,alpha,beta,gamma;
-}cellPara;
-
-/*---- サイトの状態 ----*/
-enum siteState {  UNOCCUPY, OCCUPY};
-
-/*---- サイト情報 ----*/
-struct siteInformation{
-  unsigned long num;                /* 番号 */
-  struct siteTypeInformation *type; /* 種類 */
-  pos3D pos;                        /* 座標 */
-  enum siteState state;             /* 状態 */
-  int numNeighbor;                  /* 隣接するサイトの数 */
-  struct siteInformation **neighbor; /* 隣接するサイトのポインタの配列 */
-  struct pathTypeInformation **pathTypeToNeighbor;
-};
-
-/*---- サイトの種類 ----*/
-struct siteTypeInformation{
-  int num;
-  char name[NAME_LIMIT];
-};
-
-/*---- パスの種類 ----*/
-struct pathTypeInformation{
-  int num;
-  struct siteTypeInformation *type[2];
-  double activEnergy, frequency, rate;
-};
-
-/*---- 粒子情報 ----*/
-struct particleInformation{
-  struct siteInformation *site;
-};
-
-/*---- イベント情報 ----*/
-enum eventType{ DIFFUSION, ABSORPTION, DESORPTION };
-struct eventInformation{
-  enum eventType type;
-  double rate;
-  struct siteInformation *currentSite;
-  struct siteInformation *nextSite;
-  struct particleInformation *particle;
-};
-
-#define NUM_PERTICLE 50
-
-/*---- 基本情報 ----*/
-struct basicInformation{
-  int outputInterval;
-  int numStep;
-
-  cellPara cell;
-  unsigned long numSite;
-  struct siteInformation *site;
-
-  int siteTypeNum, siteTypeNumMax;
-  struct siteTypeInformation *siteType;
-
-  unsigned long numPath;
-
-  int pathTypeNum, pathTypeNumMax;
-  struct pathTypeInformation *pathType;
-
-  int numParticle;
-  struct particleInformation particle[NUM_PERTICLE];
-
-  unsigned long numEvent, numMaxEvent;
-  struct eventInformation *event;
-  long double sumRate;
-
-  double temperature, time; /* 温度、 時間 */
-}kmc;
-
-/*---- プロトタイプ宣言 ----*/
-
-void initialize();
-void loadInput();
-void loadSite();
-void loadRate();
-void loadPath();
-
-void printInputData();
-void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
-void mainLoop();
-void loadNumSite( const char *line);
-void loadCellParameters( const char *line);
-void loadCoordination( const char *line);
-void loadNumPath( const char *line);
-void loadPair( const char *line);
-void addSiteNeighbor(struct siteInformation *site,
-	     struct siteInformation *neighbor);
-
-struct siteTypeInformation* addSiteType(char *name);
-struct siteTypeInformation* findSiteType(char *name);
-struct pathTypeInformation* addPathType(struct siteTypeInformation *type1,
-  struct siteTypeInformation *type2);
-struct pathTypeInformation* findPathType(struct siteTypeInformation *type1,
-  struct siteTypeInformation *type2);
-void countEvent(void);
-
-float rate;
-
-/*************************************************/
-/*         メイン                                */
-/*************************************************/
-int main(){
-  int i;
-  unsigned long random;
-
-  initialize();
-  loadInput();
-  loadSite();
-  loadRate();
-  loadPath();
-
-  /*  rate = 2.22e13*exp(-21.80*1000.0/(GAS_CONST*kmc.temperature));*/
-  rate = 2.22e13; 
-  kmc.numParticle = NUM_PERTICLE;
-
-  printInputData();
-
-  for(i=0;i<kmc.numParticle;i++){
-    random = (double)rand()/(double)RAND_MAX*kmc.numSite;
-    if(kmc.site[random].state==UNOCCUPY){
-      kmc.site[random].state=OCCUPY;
-      kmc.particle[i].site = &kmc.site[random];
-    }
-  }
- 
-  mainLoop();
-
-  return 0;
-}
+extern struct basicInformation kmc;
 
 /*-----------------------------------------------*/
 /*         メインループ                          */
@@ -169,7 +15,7 @@ void mainLoop(){
   FILE *fp_out, *fp_time;
   long double eventRandom;
   int step;
-  int i;  
+  unsigned int i;  
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) fileOpenError("out.kmc");
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) fileOpenError("time.kmc");
 
@@ -207,7 +53,7 @@ void mainLoop(){
 /*         イベントのカウント                     */
 /*-----------------------------------------------*/
 void countEvent(){
-  unsigned long num,i;
+  int num,i;
   int numNeighbor;
   struct siteInformation *site;
   struct eventInformation *event;
@@ -493,7 +339,8 @@ void loadPath(){
     count++;
   }
   {
-    int i,j;
+    unsigned int i;
+    int j;
     struct siteInformation *site, *neighbor;
     for(i=0;i<kmc.numSite;i++){
       site = &kmc.site[i];
@@ -566,7 +413,7 @@ void loadPair( const char *line){
    ,&pair[9][0],&pair[9][1]);
       
   if(num%2!=0) printf("Wrong path!!\n");
-  numPair = (double)num/2.0;
+  numPair = (int)((double)num/2.0);
   for(i=0;i<numPair;i++){
     site1 = &kmc.site[pair[i][0]];
     site2 = &kmc.site[pair[i][1]];
