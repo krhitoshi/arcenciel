@@ -12,19 +12,23 @@
 
 class KineticMC{
  private:
+  ofstream stdoutFile;
   int    fileOutputInterval;
   int    displayOutputInterval;
   int    numStep;
-  double temperature, systemTime; /* 温度、 時間 */
+  double temperature; /* 温度 */
+  double systemTime, lapSystemTime;  /* 時間 */
 
   void initialize();
-
+  void updateSystemTime();
   bool timePoisson;
 
   int seedType;
   cellPara cell;
 
   vector<Site>     siteVector;
+  vector<Site*>    adsorptionSiteVector;
+  vector<Site*>    desorptionSiteVector;
 
   vector<SiteType> siteTypeVector;
 
@@ -51,6 +55,7 @@ class KineticMC{
   void printCell();
   void printSiteInformation();
   void loadPath();
+  void createPathToExternalPhase();
   void loadRate();
   void loadSiteType();
   void putParticles();
@@ -59,7 +64,11 @@ class KineticMC{
   void checkTopSurface();
   void checkButtomSurface();
 
+  void printOccurrence();
+  
   void printIntervalOutput(int step, FILE *fp_out, FILE *fp_time);
+  void print10IntervalsOutput(int step, ostream &stream);
+
   void loadNumSite( const char *line);
   void loadCellParameters( const char *line);
   void loadCoordination( const char *line);

@@ -2,6 +2,7 @@
 #include "math.h"
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 using namespace std;
 
@@ -11,6 +12,7 @@ PathType::PathType(SiteType *inType1, SiteType *inType2,
 		   double inFrequency, double inActivEnergy,
 		   double temperature){
   numOccurrence = 0;
+  lapOccurrence = 0;
   num = numPathType;
   type1       = inType1;
   type2       = inType2;
@@ -36,6 +38,14 @@ void PathType::print(){
        << " " << setw(10) << rate << endl;
 }
 
+string PathType::getSiteNames(){
+  string temp;
+  temp  = type1->getName();
+  temp += "-";
+  temp += type2->getName();
+  return temp;
+}
+
 double PathType::getRate(){
   return rate;
 }
@@ -50,6 +60,7 @@ SiteType *PathType::getSiteType2(){
 
 void PathType::occur(){
   numOccurrence++;  
+  lapOccurrence++;
 }
 
 unsigned long PathType::getNumOccurrence(){
@@ -61,4 +72,19 @@ void PathType::printOccurrence(){
        << " - "
        << setw(5) << type2->getName()
        << ":" << numOccurrence << endl;
+}
+
+void PathType::printOccurrence(ostream &stream){
+  stream << setw(5) << type1->getName()
+	 << " - "
+	 << setw(5) << type2->getName()
+	 << ":" << numOccurrence << endl;
+}
+
+void PathType::printLapOccurrence(ostream &stream){
+  stream << setw(5) << type1->getName()
+	 << " - "
+	 << setw(5) << type2->getName()
+	 << ":" << lapOccurrence << endl;
+  lapOccurrence = 0;
 }

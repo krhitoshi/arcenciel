@@ -8,22 +8,27 @@
 
 class Event{
  public:
-  enum enumEventType{ DIFFUSION, ABSORPTION, DESORPTION };
+  enum enumEventType{ DIFFUSION, ADSORPTION, DESORPTION };
+
  private:
-  enumEventType type;
+  enumEventType eventType;
   double rate;
   Particle *particle;
   Site *currentSite;
   Site *nextSite;
   PathType *pathType;
+
  public:
   Event(double inRate, Particle *inParticle,
 	Site *inCurrentSite, Site *inNextSite, PathType *inPathType);
+  Event(double inRate, Particle *inParticle,
+	Site *inCurrentSite, PathType *inPathType,
+	enumEventType inEventType);
+  enumEventType getEventType();
   double    getRate();
   void      occur();
   Particle *getParticle();
   Site     *getCurrentSite();
-  Site     *getNextSite();
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <sstream>
 using namespace std;
@@ -18,11 +19,13 @@ KineticMC::KineticMC(){
 
 bool KineticMC::mainProcedure(){
   try{
+    siteTypeVector.push_back(SiteType("Ex"));
     loadInputFile();
     loadSite();
     printSiteInformation();
     loadRate();
     loadPath();
+    createPathToExternalPhase();    
     printInputData();
     putParticles();
     mainLoop();
@@ -51,9 +54,8 @@ void KineticMC::initialize(){
 
   temperature           = 300.0;
 
-  systemTime = 0.0;
-
-
+  systemTime    = 0.0;
+  lapSystemTime = 0.0;
 }
 
 void KineticMC::loadInputFile(){
@@ -69,6 +71,7 @@ void KineticMC::loadInputFile(){
   
   count = 1;
   while( fgets( line, LINE, fp ) != NULL ){
+    if(line[0]=='#') continue;
     num = sscanf(line,"%s %d",key,&value);
     if(num<1){
       cout << "Empty Line [" << count <<"]:" << fileName << endl;
@@ -198,10 +201,51 @@ void KineticMC::loadPath(){
       for(j=0;j<sitePointer->getNumNeighbor();j++){
 	neighbor = sitePointer->getNeighbor(j);
 	sitePointer->setPathTypeToNeighbor(j,
-				   findPathType(sitePointer->getType(), neighbor->getType()));
+	   findPathType(sitePointer->getType(), neighbor->getType()));
       }
     }
   }
+}
+
+
+void KineticMC::createPathToExternalPhase(){
+  vector<SiteType*> adsorptionTypeVector;
+  vector<SiteType*> desorptionTypeVector;
+  vector<PathType>::size_type i;
+  SiteType *exType = findSiteType("Ex");
+
+  for(i=0;i<pathTypeVector.size();i++){
+    if(pathTypeVector[i].getSiteType1()==exType)
+      adsorptionTypeVector
+	.push_back(pathTypeVector[i].getSiteType2());
+    else if(pathTypeVector[i].getSiteType2()==exType)
+      desorptionTypeVector
+	.push_back(pathTypeVector[i].getSiteType1());
+  }
+
+  vector<Site>::iterator iter;
+  iter = siteVector.begin();
+  while(iter!=siteVector.end()){
+    vector<SiteType*>::iterator iter2;
+    iter2 = adsorptionTypeVector.begin();
+    while(iter2!=adsorptionTypeVector.end()){
+      if(iter->getType()==*iter2){
+	adsorptionSiteVector.push_back(&(*iter));	
+      }
+      iter2++;
+    }
+    iter2 = desorptionTypeVector.begin();
+    while(iter2!=desorptionTypeVector.end()){
+      if(iter->getType()==*iter2){
+	desorptionSiteVector.push_back(&(*iter));
+	iter->desorptionFlagOn();
+      }
+      iter2++;
+    }
+    iter++;
+  }
+  cout << "size1 " << adsorptionSiteVector.size() << endl;
+  cout << "size2 " << desorptionSiteVector.size() << endl;
 }
 
 void KineticMC::loadSite(){
@@ -290,27 +334,25 @@ void KineticMC::loadSiteType(){
 }
 
 void KineticMC::putParticles(){
-  if(numParticle!=0){
-    int i;
-    unsigned long random;
-    for(i=0;i<numParticle;i++){
-      random = (unsigned long)
-	(getRandomNumber()*siteVector.size());
-      if(siteVector[random].getState()==Site::UNOCCUPY){
-	particleVector.push_back(&siteVector[random]);
-      }else{
-	i--;
-      }
-    }
-  }else{
-    vector<Site>::iterator iter;
-    iter = siteVector.begin();
-    while(iter!=siteVector.end()){
-      if((iter->getType())->getName()==string("To"))
-	particleVector.push_back(&(*iter));
-       iter++;
+  int i;
+  unsigned long random;
+  for(i=0;i<numParticle;i++){
+    random = (unsigned long)
+      (getRandomNumber()*siteVector.size());
+    if(siteVector[random].getState()==Site::UNOCCUPY){
+      particleVector.push_back(&siteVector[random]);
+    }else{
+      i--;
     }
   }
+
+  /*  vector<Site>::iterator iter;
+  iter = siteVector.begin();
+  while(iter!=siteVector.end()){
+    if((iter->getType())->getName()==string("To"))
+      particleVector.push_back(&(*iter));
+    iter++;
+    }*/
 
 }
 
@@ -324,108 +366,61 @@ void KineticMC::mainLoop(){
   int step;
   vector<Event>::size_type i;  
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
-    throw(string("Cannot Find! out.kmc"));
+    throw(string("Cannot Open! out.kmc"));
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
-    throw(string("Cannot Find! time.kmc"));
+    throw(string("Cannot Open! time.kmc"));
+
+  ofstream occurrenceStream("occurrence.kmc");
+  if(!occurrenceStream) {
+    throw(string("Cannot Open! occurrence.kmc"));
+  }
+
   cout << "############## Start ##############\n";
 
   printIntervalOutput(0,fp_out, fp_time);
-
-  int numTopSite=0;
-  vector<Site>::iterator iter;
-  iter = siteVector.begin();
-  while(iter!=siteVector.end()){
-    if((iter->getType())->getName()==string("To")) numTopSite++;
-      iter++;
-  }
-
+  print10IntervalsOutput(0,occurrenceStream);
 
   /*---- ループスタート ----*/
-  cout << "  STEP      TIME\n";
+  cout << "  STEP      TIME     LAPTIME    PARTICLES\n";
   for(step=1;step<numStep+1;step++){
     if(eventVector.size()!=0) eventVector.clear();
-    
-    int numParticleOnTopSite=0, delta;
-    vector<Particle>::iterator iter;
-    iter = particleVector.begin();
-    while(iter!=particleVector.end()){
-      if(iter->getSite()->getType()->getName()==string("To")){
-	numParticleOnTopSite++;
-      }
-       iter++;
-    }
 
-    if(step%100==0){
-    delta = numTopSite*0.5 - numParticleOnTopSite;
-
-    if(delta<0){
-      int i;
-      for(i=0;i<delta;i++){
-	vector<Particle>::iterator iter;
-	iter = particleVector.begin();
-	while(delta<0){
-	  if(iter->getSite()->getType()->getName()==string("To"));
-	    particleVector.erase(iter);
-	    delta++;
-	  }
-	  iter++;
-	}
-    }else if(delta>0){
-      vector<Site>::iterator iter;
-      iter = siteVector.begin();
-      while(delta>0){
-	if(iter->getType()->getName()==string("To")&&
-	   iter->getState()==Site::UNOCCUPY){
-	  particleVector.push_back(&(*iter));
-	  delta--;
-	}
-	iter++;
-      }
-    }
-    }
     countEvent();
     eventRandom = getRandomNumber()*sumRate;
+
     /* printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
     //    cout << "Randnum " << eventRandom << endl;
+
     for(i=0;i<eventVector.size();i++){
       eventRandom -= eventVector[i].getRate();
       if(eventRandom < 0.0) break;
     }
 
-    if(timePoisson){
-      systemTime += -log(getRandomNumber())/sumRate;
-    }else{
-      systemTime += 1.0/sumRate;
-    }
-
+    updateSystemTime();
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
     eventVector[i].occur();
-    /*    if(eventVector[i].getCurrentSite()->getType()->getName()
-       ==string("To") &&
-       eventVector[i].getNextSite()->getType()->getName()
-       !=string("To") ){
-      double r = getRandomNumber();
-      //      cout << r << endl;
-      if(r<0.8)
-      	particleVector.push_back(eventVector[i].getCurrentSite());
-	}*/
-
-    if(eventVector[i].getNextSite()->getType()->getName()
-       ==string("Bu") ){
-      vector<Particle>::iterator iter;
-      iter = particleVector.begin();
-      while(iter!=particleVector.end()){
-	if( &(*iter) == eventVector[i].getParticle()){
-	  particleVector.erase(iter);
-	  break;
-	}
-	iter++;
-      }
+    if(eventVector[i].getEventType()==Event::DESORPTION){
+       vector<Particle>::iterator iter;
+       iter = particleVector.begin();
+       while(iter!=particleVector.end()){
+	 if( &(*iter) == eventVector[i].getParticle()){
+	   particleVector.erase(iter);
+	   break;
+	 }
+	 iter++;
+       }
+    }else if(eventVector[i].getEventType()==Event::ADSORPTION){
+      particleVector.push_back(eventVector[i].getCurrentSite());
     }
 
     if(step!=0&&step%displayOutputInterval==0){
-      printf ("%10d %10.5e ",step,systemTime);
+      printf ("%10d %10.5e %10.5e ",step,systemTime,lapSystemTime);
+      lapSystemTime = 0.0;
       cout << particleVector.size() << endl;
+    }
+
+    if(step!=0&&step%(displayOutputInterval*10)==0){
+      print10IntervalsOutput(step,occurrenceStream);
     }
 
     if(step!=0&&step%fileOutputInterval==0)
@@ -434,14 +429,9 @@ void KineticMC::mainLoop(){
   /*---- ループエンド ----*/
   fclose(fp_out);
   fclose(fp_time);
+  occurrenceStream.close();
   cout << "##############  End  ##############\n";
-  {
-    vector<PathType>::size_type i;
-    
-    for(i=0;i< pathTypeVector.size();i++){
-      pathTypeVector[i].printOccurrence();
-    }
-  }
+  //  printOccurrence();
 }
 
 /*-----------------------------------------------*/
@@ -452,6 +442,8 @@ void  KineticMC::countEvent(){
   int i=0;
   int numNeighbor;
   Site *sitePointer;
+  SiteType *exType = findSiteType("Ex");
+
   sumRate=0.0;
   double rate=0.0;
 
@@ -468,13 +460,35 @@ void  KineticMC::countEvent(){
     for(count=0;count<neighbors->size();count++){
       if((*neighbors)[count]->getState()!=Site::OCCUPY){
 	rate = (*neighborPaths)[count]->getRate()/numNeighbor;
-	eventVector.push_back(Event(rate,&particleVector[num],
-		    sitePointer,(*neighbors)[count],(*neighborPaths)[count]));
+	eventVector.push_back(
+	      Event(rate,&particleVector[num],
+	    sitePointer,(*neighbors)[count],(*neighborPaths)[count]));
 
 	sumRate += rate;
       }
       i++;
     }
+    if(sitePointer->getDesorptionFlag()){
+      PathType *path = findPathType(sitePointer->getType(), exType);
+      rate = path->getRate();
+      eventVector.push_back(Event(rate,
+			  &particleVector[num],
+			  sitePointer,path,Event::DESORPTION));
+      sumRate += rate;
+    }
+  }
+
+  vector<Site*>::iterator iter;
+  iter = adsorptionSiteVector.begin();
+  while(iter != adsorptionSiteVector.end()){
+    if((*iter)->getState()==Site::UNOCCUPY){
+      PathType *path = findPathType(exType, (*iter)->getType());
+      rate = path->getRate();
+      eventVector.push_back(Event(rate, &particleVector[num],
+				  *iter,path,Event::ADSORPTION));
+      sumRate += rate;
+    }
+    iter++;
   }
 }
 
@@ -483,7 +497,8 @@ void  KineticMC::countEvent(){
 /*         入力情報の出力                        */
 /*-----------------------------------------------*/
 void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
-  fprintf (fp_time,"%10d %10.5e\n",step,systemTime);
+  fprintf (fp_time,"%10d %10.5e %10.5e\n",
+	   step,systemTime,lapSystemTime);
   fflush(fp_time);
 
   vector<Particle>::size_type i;
@@ -499,6 +514,22 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
   fflush(fp_out);
 }
 
+void KineticMC::print10IntervalsOutput(int step, ostream &stream){
+  vector<PathType>::size_type i;
+  //  SiteType *exType = findSiteType("Ex");
+  stream << step;
+  for(i=0;i<pathTypeVector.size();i++){
+    //    if(pathTypeVector[i].getSiteType1()==exType||
+    // pathTypeVector[i].getSiteType2()==exType)
+    //	  pathTypeVector[i].printLapOccurrence(cout);
+    if(step==0){
+      stream << " " << pathTypeVector[i].getSiteNames();
+    }else{
+      stream << " " << pathTypeVector[i].getNumOccurrence();
+    }
+  }
+  stream << endl;
+}
 
 /*-----------------------------------------------*/
 /*         site数の読み込み                      */
@@ -655,6 +686,18 @@ double KineticMC::getRandomNumber(){
   return (double)rand()/(double)RAND_MAX;
 }
 
+void KineticMC::updateSystemTime(){
+  double add;
+  if(timePoisson){
+    add = -log(getRandomNumber())/sumRate;
+  }else{
+    add = 1.0/sumRate;
+  }
+
+  systemTime += add;
+  lapSystemTime += add;
+}
+
 void KineticMC::clearVectors(){
   vector<Site>::size_type i;
   for(i=0; i< siteVector.size(); i++){
@@ -664,4 +707,18 @@ void KineticMC::clearVectors(){
   siteTypeVector.clear();
   pathTypeVector.clear();
   eventVector.clear();
+}
+
+void KineticMC::printOccurrence(){
+  ofstream out("occurrence.kmc");
+  if(!out) {
+    cout << "Cannot Open occurrence.kmc";
+    return;
+  }
+  vector<PathType>::size_type i;
+  for(i=0;i< pathTypeVector.size();i++){
+    pathTypeVector[i].printOccurrence(out);
+    pathTypeVector[i].printOccurrence(cout);
+  }
+  out.close();
 }

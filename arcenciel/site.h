@@ -39,6 +39,7 @@ class Site{
   pos3D         pos;              /* 座標 */
   enumSiteState state;            /* 状態 */
   int           numNeighbor;    /* 隣接するサイトの数 */
+  bool          desorptionFlag;
  public:
   static int getNumSite();
   Site(struct position3D inPos, SiteType *inType);
@@ -53,7 +54,9 @@ class Site{
   enumSiteState  getState();
   void           setState(enumSiteState value);
   void           addNeighbor(Site *inNeighbor, PathType *inPathType);
-
+  bool getDesorptionFlag();
+  void desorptionFlagOn();
+  void desorptionFlagOff();
   vector<Site*>     *getNeighborVector();
   vector<PathType*> *getPathTypeToNeighborVector();
   

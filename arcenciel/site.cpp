@@ -33,6 +33,19 @@ Site::Site(struct position3D inPos, SiteType *inType){
   state = Site::UNOCCUPY;
   numNeighbor = 0;
   numSite++;
+  desorptionFlag = false;
+}
+
+bool Site::getDesorptionFlag(){
+  return desorptionFlag;
+}
+
+void Site::desorptionFlagOn(){
+  desorptionFlag = true;
+}
+
+void Site::desorptionFlagOff(){
+  desorptionFlag = false;
 }
 
 int Site::getNumSite(){

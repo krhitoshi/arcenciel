@@ -2,11 +2,22 @@
 
 Event::Event(double inRate, Particle *inParticle,
      Site *inCurrentSite, Site *inNextSite, PathType *inPathType){
+  rate        = inRate;
+  particle    = inParticle;
+  currentSite = inCurrentSite;
+  nextSite    = inNextSite;
+  pathType    = inPathType;
+  eventType   = DIFFUSION;
+}
+
+Event::Event(double inRate, Particle *inParticle,
+	     Site *inCurrentSite, PathType *inPathType,
+	     enumEventType inEventType){
   rate = inRate;
   particle = inParticle;
   currentSite = inCurrentSite;
-  nextSite = inNextSite;
   pathType = inPathType;
+  eventType = inEventType;
 }
 
 double Event::getRate(){
@@ -21,13 +32,21 @@ Site *Event::getCurrentSite(){
   return currentSite;
 }
 
-Site *Event::getNextSite(){
-  return nextSite;
+void Event::occur(){
+  if(eventType==DIFFUSION){
+    currentSite->setState(Site::UNOCCUPY);
+    nextSite->setState(Site::OCCUPY);
+    particle->setSite(nextSite);
+    pathType->occur();
+  }else if(eventType==DESORPTION){
+    currentSite->setState(Site::UNOCCUPY);
+    pathType->occur();
+  }else if(eventType==ADSORPTION){
+    currentSite->setState(Site::UNOCCUPY);
+    pathType->occur();
+  }
 }
 
-void Event::occur(){
-  currentSite->setState(Site::UNOCCUPY);
-  nextSite->setState(Site::OCCUPY);
-  particle->setSite(nextSite);
-  pathType->occur();
+Event::enumEventType Event::getEventType(){
+  return eventType;
 }
