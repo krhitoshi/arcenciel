@@ -3,8 +3,6 @@
 
 #include "constants.h"
 
-#define MAX_NUM_PERTICLE 10000
-
 /*---- ºÂÉ¸ ----*/
 typedef struct position3D{
   float x,y,z;

@@ -24,23 +24,34 @@ KineticMC::KineticMC(){
   initialize();
 }
 
+/*-----------------------------------------------*/
+/*         プログラム名の表示                    */
+/*-----------------------------------------------*/
 bool KineticMC::mainProcedure(){
   try{
     siteTypeVector.push_back(SiteType("Ex"));
-    loadInputFile();
+
+    loadInputFile(); 
+
     loadSite();
     printSiteInformation();
+
     loadRate();
+    printRateInformation();
+
     loadPath();
     createPathToExternalPhase();    
+
     printInputData();
     putParticles();
+
     mainLoop();
   }
 
+  /* エラー処理 */
   catch(string errorString){
     cout << "Error: " << errorString << endl;
-    return false;
+    return false; 
   }
 
   return true;
@@ -53,16 +64,6 @@ void KineticMC::printProgramName(){
   if(silentFlag) return;
   cout << PROGRAM_NAME     << endl;
   cout << COPYRIGHT_STRING << endl;
-}
-
-void KineticMC::stdOutput(const char *line){
-  if(silentFlag) return;
-  cout << line;
-}
-
-void KineticMC::stdOutput(string line){
-  if(silentFlag) return;
-  cout << line;
 }
 
 void KineticMC::silentFlagOn(){
@@ -86,14 +87,24 @@ void KineticMC::initialize(){
 
   systemTime    = 0.0;
   lapSystemTime = 0.0;
+
+  siteFileName = "site.kmc";
+  pathFileName = "path.kmc";
+  rateFileName = "rate.kmc";
 }
 
+/*-----------------------------------------------*/
+/*         計算条件の読み込み input.kmc          */
+/*-----------------------------------------------*/
 void KineticMC::loadInputFile(){
   FILE *fp;
   string fileName="input.kmc";
   char line[LINE], key[LINE];
-  int  value, num, count;
+  string keyString;
+  int num, count;
+  int    intValue; 
   double doubleValue;
+  char   charValue[LINE];
 
   if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
     string error = "Cannot Find! " + fileName;
@@ -103,8 +114,10 @@ void KineticMC::loadInputFile(){
   count = 1;
   while( fgets( line, LINE, fp ) != NULL ){
     if(line[0]=='#') continue;
-    num = sscanf(line,"%s %d",key,&value);
+    num = sscanf(line,"%s %d",key,&intValue);
+    keyString = key;
     sscanf(line,"%*s %lf",&doubleValue);
+    sscanf(line,"%*s %s",charValue);
 
     if(num<1){
       if(!silentFlag)
@@ -122,23 +135,23 @@ void KineticMC::loadInputFile(){
     }
   
     
-    if(!strcmp(key,"fileInterval")){
-      fileOutputInterval = value;
-    }else if(!strcmp(key,"displayInterval")){
-      displayOutputInterval = value;
-    }else if(!strcmp(key,"bulkParticle")){
-      numParticle = value;
-    }else if(!strcmp(key,"step")){
-      numStep            = value;
-    }else if(!strcmp(key,"temperature")){
+    if(keyString == "fileInterval"){
+      fileOutputInterval = intValue;
+    }else if(keyString == "displayInterval"){
+      displayOutputInterval = intValue;
+    }else if(keyString == "bulkParticle"){
+      numParticle = intValue;
+    }else if(keyString == "step"){
+      numStep            = intValue;
+    }else if(keyString == "temperature"){
       temperature        = doubleValue;
-    }else if(!strcmp(key,"poisson")){
-      if(value==0)
+    }else if(keyString == "poisson"){
+      if(intValue==0)
 	timePoisson = false;
       else
 	timePoisson = true;
-    }else if(!strcmp(key,"seed")){
-      seedType = value;
+    }else if(keyString == "seed"){
+      seedType = intValue;
     }else{
       string error = "Unknown Keyword!: ";
       error += key;
@@ -150,31 +163,48 @@ void KineticMC::loadInputFile(){
   if(seedType==0){
     srand(time(NULL)); /* 乱数の種を現在の時間とする */
   }else{
-    srand(seedType);   /* 0以外の値が入力されていればそれを使用 */  
+    srand(seedType);   /* 0以外の値ならばそれを乱数の種とする */  
   }
 
   fclose(fp);
 }
 
 /*-----------------------------------------------*/
-/*         入力情報の出力                        */
+/*         site情報の読み込み site.kmc           */
 /*-----------------------------------------------*/
-void KineticMC::printInputData(){
-  if(silentFlag) return;
-  cout << "Step                     : " << numStep << endl;
-  cout << "Temperature              : " << temperature << endl;
-  cout << "Number of Bulk Particles : " << numParticle << endl;
-  cout << "File    Output Interval  : " << fileOutputInterval << endl;
-  cout << "Display Output Interval  : " << displayOutputInterval << endl;
+void KineticMC::loadSite(){
+  FILE *fp;
+  char line[LINE];
+  int count;
+
+  if(!silentFlag)
+    cout << "loading " << siteFileName << "..." << endl;
+
+  loadSiteType();
+  if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ) {
+    string error = "Cannot Find! " + siteFileName;
+    throw(error);
+  }
+
+  count=1;
+  while( fgets( line, LINE, fp ) != NULL ){
+    if( count == 1 )
+      ;
+    else if( count == 2 )
+      loadCellParameters(line);
+    else
+      loadCoordination(line);
+    count++;
+  }
+  fclose(fp);
 }
 
-
 /*-----------------------------------------------*/
-/*         rate情報の読み込み                    */
+/*         rate情報の読み込み rate.kmc           */
+/*         path種, rate, 活性化エネルギー        */
 /*-----------------------------------------------*/
 void KineticMC::loadRate(){
   FILE *fp;
-  string fileName="rate.kmc";
   char line[LINE];
   char name1[LINE],name2[LINE];
   double distance;
@@ -182,8 +212,8 @@ void KineticMC::loadRate(){
   double frequency,activEnergy;
   SiteType *siteType1, *siteType2;
 
-  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){ 
-    string error = "Cannot Find! " + fileName;
+  if( ( fp = fopen( rateFileName.c_str(), "r" ) ) == NULL ){ 
+    string error = "Cannot Find! " + rateFileName;
     throw(error);
     }
 
@@ -191,7 +221,7 @@ void KineticMC::loadRate(){
     num = sscanf(line, "%s %s %lf %lf %lf",
 		 name1,name2,&frequency,&activEnergy,&distance);
     if ( num < 4 && !silentFlag)
-      cout << "Wrong Format in " << fileName << "!" << endl;
+      cout << "Wrong Format in " << rateFileName << "!" << endl;
     if(!silentFlag)
       cout << name1 << " " << name2 << endl;
 
@@ -207,31 +237,25 @@ void KineticMC::loadRate(){
 
   }
   fclose(fp);
-
-  vector<PathType>::size_type k;
-  for(k=0;k<pathTypeVector.size();k++){
-    pathTypeVector[k].print();
-  }
 }
 
 /*-----------------------------------------------*/
-/*         path情報の読み込み                    */
+/*         path情報の読み込み path.kmc           */
 /*-----------------------------------------------*/
 void KineticMC::loadPath(){
   FILE *fp;
-  string fileName="path.kmc";
   char line[LINE];
   int count;
 
-  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
-    string error = "Cannot Find! " + fileName;
+  if( ( fp = fopen( pathFileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + pathFileName;
     throw(error);
   }
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
     if( count == 1 )
-      loadNumPath(line);
+      ;
     else
       loadPair(line);
     count++;
@@ -251,6 +275,17 @@ void KineticMC::loadPath(){
   }
 }
 
+/*-----------------------------------------------*/
+/*         入力情報の出力                        */
+/*-----------------------------------------------*/
+void KineticMC::printInputData(){
+  if(silentFlag) return;
+  cout << "Step                     : " << numStep << endl;
+  cout << "Temperature              : " << temperature << endl;
+  cout << "Number of Bulk Particles : " << numParticle << endl;
+  cout << "File    Output Interval  : " << fileOutputInterval << endl;
+  cout << "Display Output Interval  : " << displayOutputInterval << endl;
+}
 
 void KineticMC::createPathToExternalPhase(){
   vector<SiteType*> adsorptionTypeVector;
@@ -369,73 +404,21 @@ void KineticMC::createPathToExternalPhase(){
     cout << "Recombinative Desorption Sites "
 	 << recombinativeDesorptionSiteVector.size() << endl;
   }
-
-}
-
-void KineticMC::loadSite(){
-  FILE *fp;
-  string fileName="site.kmc";
-  char line[LINE];
-  int count;
-
-  if(!silentFlag)
-    cout << "loading " << fileName << "..." << endl;
-
-  loadSiteType();
-  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ) {
-    string error = "Cannot Find! " + fileName;
-    throw(error);
-  }
-
-  count=1;
-  while( fgets( line, LINE, fp ) != NULL ){
-    if( count == 1 )
-      loadNumSite(line);
-    else if( count == 2 )
-      loadCellParameters(line);
-    else
-      loadCoordination(line);
-    count++;
-  }
-  fclose(fp);
-}
-
-void KineticMC::printSiteInformation(){
-  if(silentFlag) return;
-  cout << "Number of Site      : " << siteVector.size() << endl;
-  
-  cout.setf(ios::fixed);
-  cout.precision(4);
-  
-  cout << "Cell Parameters[Ang]: "
-       << "      a=" << setw(10) << cell.a 
-       << ",     b=" << setw(10) << cell.b
-       << ",     c=" << setw(10) << cell.c << endl;
-  cout << "Cell Parameters[Deg]: "
-       << "  alpha=" << setw(10) << cell.alpha
-       << ",  beta=" << setw(10) << cell.beta
-       << ", gamma=" << setw(10) << cell.gamma << endl;
-  vector<SiteType>::size_type i;
-  for(i=0;i<siteTypeVector.size();i++){
-    cout << "Site Type " << setw(3) << siteTypeVector[i].getNum()
-	 << ": "<< siteTypeVector[i].getName() << endl;
-  }
 }
 
 /*-----------------------------------------------*/
-/*         site情報の読み込み                    */
+/*         site種情報の読み込み site.kmc         */
 /*-----------------------------------------------*/
 void KineticMC::loadSiteType(){
   FILE *fp;
-  string fileName="site.kmc";
   char line[LINE];
   int count;
   char name[LINE];
   int num;
   SiteType *siteType;
   
-  if( ( fp = fopen( fileName.c_str(), "r" ) ) == NULL ){
-    string error = "Cannot Find! " + fileName;
+  if( ( fp = fopen( siteFileName.c_str(), "r" ) ) == NULL ){
+    string error = "Cannot Find! " + siteFileName;
     throw(error);
   }
 
@@ -446,7 +429,8 @@ void KineticMC::loadSiteType(){
       continue;
     }else{
       num = sscanf(line, "%s",name);
-      if ( num != 1 ) printf("Wrong coordination!!\n");
+      if ( num != 1 && !silentFlag)
+	cout << "Wrong coordination!!" << endl;
       
       if(SiteType::getNumSiteType()==0){
 	siteType = addSiteType(name);
@@ -488,10 +472,11 @@ void KineticMC::putParticles(){
 /*-----------------------------------------------*/
 
 void KineticMC::mainLoop(){
-  FILE *fp_out, *fp_time;
-  long double eventRandom;
   int step;
+  long double eventRandom;
   vector<Event>::size_type i;  
+  FILE *fp_out, *fp_time;
+
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
     throw(string("Cannot Open! out.kmc"));
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
@@ -693,6 +678,43 @@ void  KineticMC::countEvent(){
   }
 }
 
+/*-----------------------------------------------*/
+/*         site情報の出力                        */
+/*-----------------------------------------------*/
+void KineticMC::printSiteInformation(){
+  if(silentFlag) return;
+
+  cout << "Number of Site      : " << siteVector.size() << endl;
+  
+  cout.setf(ios::fixed);
+  cout.precision(4);
+  
+  cout << "Cell Parameters[Ang]: "
+       << "      a=" << setw(10) << cell.a 
+       << ",     b=" << setw(10) << cell.b
+       << ",     c=" << setw(10) << cell.c << endl;
+  cout << "Cell Parameters[Deg]: "
+       << "  alpha=" << setw(10) << cell.alpha
+       << ",  beta=" << setw(10) << cell.beta
+       << ", gamma=" << setw(10) << cell.gamma << endl;
+  vector<SiteType>::size_type i;
+  for(i=0;i<siteTypeVector.size();i++){
+    cout << "Site Type " << setw(3) << siteTypeVector[i].getNum()
+	 << ": "<< siteTypeVector[i].getName() << endl;
+  }
+}
+
+/*-----------------------------------------------*/
+/*         path情報の出力                        */
+/*-----------------------------------------------*/
+void KineticMC::printRateInformation(){
+  if(silentFlag) return;
+
+  vector<PathType>::size_type k;
+  for(k=0;k<pathTypeVector.size();k++){
+    pathTypeVector[k].print();
+  }
+}
 
 /*-----------------------------------------------*/
 /*         入力情報の出力                        */
@@ -732,17 +754,6 @@ void KineticMC::printOccurrence(int step, ostream &stream){
   stream << endl;
 }
 
-/*-----------------------------------------------*/
-/*         site数の読み込み                      */
-/*-----------------------------------------------*/
-void  KineticMC::loadNumSite( const char *line){
-  int num;
-  unsigned long dummy;
-  num = sscanf( line, "%lu",&dummy);
-  if ( num != 1 ) 
-    throw(string("Not Find the number of sites!"));
-
-}
 
 /*-----------------------------------------------*/
 /*         セルパラメータの読み込み            */
@@ -767,22 +778,12 @@ void  KineticMC::loadCoordination( const char *line){
   int num;
 
   num = sscanf(line, "%s %f %f %f",name,&pos.x,&pos.y,&pos.z);
-  if ( num != 4 ) printf("Wrong coordination!!\n");
+  if ( num != 4 && !silentFlag)
+    cout << "Wrong coordination!!" << endl;
 
   SiteType *foundSiteType = findSiteType(name);
 
   siteVector.push_back(Site(pos,foundSiteType));
-}
-
-
-/*-----------------------------------------------*/
-/*         path数の読み込み                      */
-/*-----------------------------------------------*/
-void  KineticMC::loadNumPath( const char *line){
-  int num;
-  num = sscanf( line, "%lu",&numPath);
-  if ( num != 1 ) 
-    throw(string("Not Find the number of paths!"));
 }
 
 /*-----------------------------------------------*/
@@ -808,7 +809,8 @@ void  KineticMC::loadPair( const char *line){
    ,&pair[6][0],&pair[6][1],&pair[7][0],&pair[7][1],&pair[8][0],&pair[8][1]
    ,&pair[9][0],&pair[9][1]);
       
-  if(num%2!=0) printf("Wrong path!!\n");
+  if(num%2!=0 && !silentFlag)
+    cout << "Wrong path!!" << endl;
   numPair = (int)((double)num/2.0);
   for(i=0;i<numPair;i++){
     site1 = &siteVector[pair[i][0]];
@@ -883,7 +885,7 @@ PathType*  KineticMC::findPathType(SiteType *type1,SiteType *type2){
 
 
 /*-----------------------------------------------*/
-/*         乱数の発生                       */
+/*         乱数の発生                            */
 /*-----------------------------------------------*/
 double KineticMC::getRandomNumber(){
   return (double)rand()/(double)RAND_MAX;
