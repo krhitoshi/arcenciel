@@ -316,8 +316,12 @@ void KineticMC::mainLoop(){
     }
 
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
-    eventVector[i].getCurrentSite()->setState(Site::UNOCCUPY);
-    eventVector[i].getNextSite()->setState(Site::OCCUPY);
+    Site *currentSite=eventVector[i].getCurrentSite();
+    Site *nextSite   =eventVector[i].getNextSite();
+
+    currentSite->setState(Site::UNOCCUPY);
+    nextSite->setState(Site::OCCUPY);
+    //    findPathType(currentSite->getType(),nextSite->getType())->occur();
     eventVector[i].getParticle()
       ->setSite(eventVector[i].getNextSite());
 
@@ -331,6 +335,13 @@ void KineticMC::mainLoop(){
   fclose(fp_out);
   fclose(fp_time);
   cout << "##############  End  ##############\n";
+  {
+    vector<PathType>::size_type i;
+    
+    for(i=0;i< pathTypeVector.size();i++){
+    cout << i << " :" << pathTypeVector[i].getNumOccurrence() << endl;
+    }
+  }
 }
 
 /*-----------------------------------------------*/

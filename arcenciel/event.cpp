@@ -23,3 +23,9 @@ Site *Event::getCurrentSite(){
 Site *Event::getNextSite(){
   return nextSite;
 }
+
+void Event::occur(){
+  currentSite->setState(Site::UNOCCUPY);
+  nextSite->setState(Site::OCCUPY);
+  particle->setSite(nextSite);
+}

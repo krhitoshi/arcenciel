@@ -6,7 +6,8 @@
 /*---- パスの種類 ----*/
 class PathType{
  private:
-  static int numPathType;
+  static    int numPathType;
+  unsigned long numOccurrence;
   int num;
   SiteType *type1, *type2;
   double activEnergy, frequency, rate;
@@ -18,6 +19,7 @@ class PathType{
   double    getRate();
   SiteType *getSiteType1();
   SiteType *getSiteType2();
+  unsigned long getNumOccurrence();
 };
 
 #endif

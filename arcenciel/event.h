@@ -18,6 +18,7 @@ class Event{
   Event(double inRate, Particle *inParticle,
 	Site *inCurrentSite, Site *inNextSite);
   double    getRate();
+  void      occur();
   Particle *getParticle();
   Site     *getCurrentSite();
   Site     *getNextSite();

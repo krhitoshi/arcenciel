@@ -10,6 +10,7 @@ int PathType::numPathType;
 PathType::PathType(SiteType *inType1, SiteType *inType2,
 		   double inFrequency, double inActivEnergy,
 		   double temperature){
+  numOccurrence = 0;
   num = numPathType;
   type1       = inType1;
   type2       = inType2;
@@ -47,3 +48,6 @@ SiteType *PathType::getSiteType2(){
   return type2;
 }
 
+unsigned long PathType::getNumOccurrence(){
+  return numOccurrence;
+}
