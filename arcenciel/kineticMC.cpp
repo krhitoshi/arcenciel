@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
+#include <time.h>
 #include <iostream>
 using namespace std;
 
@@ -19,6 +19,8 @@ void KineticMC::printProgramName(){
 }
 
 void KineticMC::initialize(){
+  seedType              = 0;
+  timePoisson           = true;
   numParticle           = 1;
   fileOutputInterval    = 50;
   displayOutputInterval = 10000;
@@ -26,7 +28,7 @@ void KineticMC::initialize(){
 
   temperature           = 300.0;
 
-  time = 0.0;
+  systemTime = 0.0;
 
   siteTypeNum = 0;
   siteTypeNumMax = 1;
@@ -71,9 +73,23 @@ void KineticMC::loadInputFile(){
       numParticle = value;
     else if(!strcmp(key,"step"))        numStep            = value;
     else if(!strcmp(key,"temperature")) temperature        = value;
-    else
+    else if(!strcmp(key,"poisson")){
+      if(value==0)
+	timePoisson = false;
+      else
+	timePoisson = true;
+    }else if(!strcmp(key,"seed")){
+      seedType = value;
+    }else
       cout << "Unknown Keyword!! :" << key << endl;
   }
+
+  if(seedType==0){
+    srand(time(NULL));
+  }else{
+    srand(seedType);
+  }
+
   fclose(fp);
 }
 
@@ -81,11 +97,11 @@ void KineticMC::loadInputFile(){
 /*         入力情報の出力                        */
 /*-----------------------------------------------*/
 void KineticMC::printInputData(){
-  cout << "Step                    : " << numStep << endl;
-  cout << "Temperature             : " << temperature << endl;
-  cout << "Number of Particle      : " << numParticle << endl;
-  cout << "File    Output Interval : " << fileOutputInterval << endl;
-  cout << "Display Output Interval : " << displayOutputInterval << endl;
+  cout << "Step                     : " << numStep << endl;
+  cout << "Temperature              : " << temperature << endl;
+  cout << "Number of Bulk Particles : " << numParticle << endl;
+  cout << "File    Output Interval  : " << fileOutputInterval << endl;
+  cout << "Display Output Interval  : " << displayOutputInterval << endl;
 }
 
 
@@ -245,7 +261,7 @@ void KineticMC::putParticles(){
   unsigned long random;
    for(i=0;i<numParticle;i++){
     random = (unsigned long)
-      ((double)rand()/(double)RAND_MAX*numSite);
+      (getRandomNumber()*numSite);
     if(site[random].state==UNOCCUPY){
       site[random].state=OCCUPY;
       particle[i].site = &site[random];
@@ -269,6 +285,8 @@ void KineticMC::mainLoop(){
     fileOpenError("out.kmc");
   if( ( fp_time = fopen( "time.kmc", "w" )) == NULL ) 
     fileOpenError("time.kmc");
+  cout << "############## Start ##############\n";
+
 
   printIntervalOutput(0,fp_out, fp_time);
 
@@ -276,24 +294,27 @@ void KineticMC::mainLoop(){
   cout << "  STEP      TIME\n";
   for(step=1;step<numStep+1;step++){
     countEvent();
-    eventRandom = (double)rand()/(double)RAND_MAX*sumRate;
+    eventRandom = getRandomNumber()*sumRate;
     /* printf ("Number of Event: %lu %Lf %Lf\n",numEvent,sumRate,eventRandom);*/
+    //    cout << "Randnum " << eventRandom << endl;
     for(i=0;i<numEvent;i++){
       eventRandom -= event[i].rate;
       if(eventRandom < 0.0) break;
     }
 
-    /*      time += -log((double)rand()/(double)RAND_MAX)*1.0/sumRate; */
-    /*      time += -log((double)rand()/(double)RAND_MAX)*1.0/sumRate*12.0; */
-    time += 1.0/sumRate;
+    if(timePoisson){
+      systemTime += -log(getRandomNumber())/sumRate;
+    }else{
+      systemTime += 1.0/sumRate;
+    }
 
-    /*    printf ("%u th event!! Time: %e\n",i,time);*/
+    /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
     event[i].currentSite->state = UNOCCUPY;
     event[i].nextSite->state = OCCUPY;
     event[i].particle->site = event[i].nextSite;
 
     if(step!=0&&step%displayOutputInterval==0)
-      printf ("%10d %10.5e\n",step,time);
+      printf ("%10d %10.5e\n",step,systemTime);
 
     if(step!=0&&step%fileOutputInterval==0)
       printIntervalOutput(step,fp_out, fp_time);
@@ -301,6 +322,8 @@ void KineticMC::mainLoop(){
   /*---- ループエンド ----*/
   fclose(fp_out);
   fclose(fp_time);
+  cout << "##############  End  ##############\n";
+
 }
 
 /*-----------------------------------------------*/
@@ -341,7 +364,7 @@ void  KineticMC::countEvent(){
 /*-----------------------------------------------*/
 void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
   int i;
-  fprintf (fp_time,"%10d %10.5e\n",step,time);
+  fprintf (fp_time,"%10d %10.5e\n",step,systemTime);
   fflush(fp_time);
   
   for(i=1;i<numParticle+1;i++){
@@ -560,4 +583,12 @@ struct pathTypeInformation*  KineticMC::findPathType
   }
   printf ("Cannot find!! path type %s %s\n",type1->name,type2->name);
   return addPathType(type1,type2);  
+}
+
+
+/*-----------------------------------------------*/
+/*         乱数の発生                       */
+/*-----------------------------------------------*/
+double KineticMC::getRandomNumber(){
+  return (double)rand()/(double)RAND_MAX;
 }

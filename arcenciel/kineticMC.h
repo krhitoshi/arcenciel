@@ -6,10 +6,12 @@ class KineticMC{
   int    fileOutputInterval;
   int    displayOutputInterval;
   int    numStep;
-  double temperature, time; /* 温度、 時間 */
+  double temperature, systemTime; /* 温度、 時間 */
 
   void initialize();
 
+  bool timePoisson;
+  int seedType;
   cellPara cell;
   unsigned long numSite;
   struct siteInformation *site;
@@ -49,7 +51,7 @@ class KineticMC{
   void loadPair( const char *line);
   void addSiteNeighbor(struct siteInformation *site,
 	     struct siteInformation *neighbor);
-
+  double getRandomNumber();
   struct siteTypeInformation* findSiteType(char *name);
   struct siteTypeInformation* addSiteType(char *name);
 
