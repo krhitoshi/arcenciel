@@ -20,6 +20,19 @@ Event::Event(double inRate, Particle *inParticle,
   eventType = inEventType;
 }
 
+Event::Event(double inRate, 
+	     Particle *inParticle, Particle *inParticle2,
+	     Site *inCurrentSite, Site *inCurrentSite2,
+	     PathType *inPathType, enumEventType inEventType){
+  rate = inRate;
+  particle = inParticle;
+  particle2 = inParticle2;
+  currentSite = inCurrentSite;
+  currentSite2 = inCurrentSite2;
+  pathType = inPathType;
+  eventType = inEventType;
+}
+
 double Event::getRate(){
   return rate;
 }

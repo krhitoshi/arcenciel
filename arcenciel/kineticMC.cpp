@@ -146,6 +146,7 @@ void KineticMC::loadRate(){
   string fileName="rate.kmc";
   char line[LINE];
   char name1[LINE],name2[LINE];
+  char twoSitesFlag[LINE];
   int  num;
   double frequency,activEnergy;
   SiteType *siteType1, *siteType2;
@@ -156,9 +157,9 @@ void KineticMC::loadRate(){
     }
 
   while( fgets( line, LINE, fp ) != NULL ){
-    num = sscanf(line, "%s %s %lf %lf",
-		 name1,name2,&frequency,&activEnergy);
-    if ( num != 4 )
+    num = sscanf(line, "%s %s %lf %lf %s",
+		 name1,name2,&frequency,&activEnergy,twoSitesFlag);
+    if ( num < 4 )
       cout << "Wrong Format in " << fileName << "!" << endl;
     cout << name1 << " " << name2 << endl;
     siteType1 = findSiteTypeNoAppend(name1);
@@ -166,6 +167,9 @@ void KineticMC::loadRate(){
     if(siteType1==NULL || siteType2==NULL) continue;
     pathTypeVector.push_back(PathType(siteType1,siteType2,
 			    frequency,activEnergy,temperature));
+    if(string(twoSitesFlag) == "two") 
+      pathTypeVector.back().twoSitesFlagOn();
+
   }
   fclose(fp);
 
@@ -216,16 +220,30 @@ void KineticMC::loadPath(){
 void KineticMC::createPathToExternalPhase(){
   vector<SiteType*> adsorptionTypeVector;
   vector<SiteType*> desorptionTypeVector;
+  vector<SiteType*> adsorptionTypeVectorTwo;
+  vector<SiteType*> desorptionTypeVectorTwo;
+
   vector<PathType>::size_type i;
   SiteType *exType = findSiteType("Ex");
 
   for(i=0;i<pathTypeVector.size();i++){
-    if(pathTypeVector[i].getSiteType1()==exType)
-      adsorptionTypeVector
-	.push_back(pathTypeVector[i].getSiteType2());
-    else if(pathTypeVector[i].getSiteType2()==exType)
-      desorptionTypeVector
-	.push_back(pathTypeVector[i].getSiteType1());
+    if(pathTypeVector[i].getSiteType1()==exType){
+      if(pathTypeVector[i].getTwoSitesFlag()){
+	adsorptionTypeVectorTwo
+	  .push_back(pathTypeVector[i].getSiteType2());
+      }else{
+	adsorptionTypeVector
+	  .push_back(pathTypeVector[i].getSiteType2());
+      }
+    }else if(pathTypeVector[i].getSiteType2()==exType){
+      if(pathTypeVector[i].getTwoSitesFlag()){
+	desorptionTypeVectorTwo
+	  .push_back(pathTypeVector[i].getSiteType1());
+      }else{
+	desorptionTypeVector
+	  .push_back(pathTypeVector[i].getSiteType1());
+      }
+    }
   }
 
   vector<Site>::iterator iter;
@@ -243,7 +261,6 @@ void KineticMC::createPathToExternalPhase(){
     while(iter2!=desorptionTypeVector.end()){
       if(iter->getType()==*iter2){
 	desorptionSiteVector.push_back(&(*iter));
-	iter->desorptionFlagOn();
       }
       iter2++;
     }
@@ -470,27 +487,36 @@ void  KineticMC::countEvent(){
       }
       i++;
     }
-    if(sitePointer->getDesorptionFlag()){
-      PathType *path = findPathType(sitePointer->getType(), exType);
-      rate = path->getRate();
-      eventVector.push_back(Event(rate,
-			  &particleVector[num],
-			  sitePointer,path,Event::DESORPTION));
-      sumRate += rate;
+  }
+
+  {
+    vector<Site*>::iterator iter;
+    iter = desorptionSiteVector.begin();
+    while(iter != desorptionSiteVector.end()){
+      if((*iter)->getState()==Site::OCCUPY){
+	PathType *path = findPathType(exType, (*iter)->getType());
+	rate = path->getRate();
+	eventVector.push_back(Event(rate, NULL,
+				    *iter,path,Event::DESORPTION));
+	sumRate += rate;
+      }
+      iter++;
     }
   }
 
-  vector<Site*>::iterator iter;
-  iter = adsorptionSiteVector.begin();
-  while(iter != adsorptionSiteVector.end()){
-    if((*iter)->getState()==Site::UNOCCUPY){
-      PathType *path = findPathType(exType, (*iter)->getType());
-      rate = path->getRate();
-      eventVector.push_back(Event(rate, &particleVector[num],
-				  *iter,path,Event::ADSORPTION));
-      sumRate += rate;
+  {
+    vector<Site*>::iterator iter;
+    iter = adsorptionSiteVector.begin();
+    while(iter != adsorptionSiteVector.end()){
+      if((*iter)->getState()==Site::UNOCCUPY){
+	PathType *path = findPathType(exType, (*iter)->getType());
+	rate = path->getRate();
+	eventVector.push_back(Event(rate, NULL,
+				    *iter,path,Event::ADSORPTION));
+	sumRate += rate;
+      }
+      iter++;
     }
-    iter++;
   }
 }
 

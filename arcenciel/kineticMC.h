@@ -10,6 +10,22 @@
 #include "path.h"
 #include "event.h"
 
+class SitePair{
+ private:
+  Site *site1, *site2;
+ public:
+  SitePair(Site *inSite1, Site *inSite2){
+    site1 = inSite1;
+    site2 = inSite2;
+  }
+  Site *getSite1(){
+    return site1;
+  }
+  Site *getSite2(){
+    return site2;
+  }
+};
+
 class KineticMC{
  private:
   ofstream stdoutFile;
@@ -29,6 +45,8 @@ class KineticMC{
   vector<Site>     siteVector;
   vector<Site*>    adsorptionSiteVector;
   vector<Site*>    desorptionSiteVector;
+  vector<SitePair> dissosiativeAdsorptionSiteVector;
+  vector<SitePair> recombinativeDesorptionSiteVector;
 
   vector<SiteType> siteTypeVector;
 

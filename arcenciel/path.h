@@ -12,6 +12,7 @@ using namespace std;
 /*---- パスの種類 ----*/
 class PathType{
  private:
+  bool          twoSitesFlag;
   static    int numPathType;
   unsigned long numOccurrence;
   unsigned long lapOccurrence;
@@ -30,6 +31,9 @@ class PathType{
   SiteType *getSiteType2();
   string    getSiteNames();
   unsigned long getNumOccurrence();
+  bool      getTwoSitesFlag();
+  void      twoSitesFlagOn();
+  void      twoSitesFlagOff();
   void      printOccurrence();
   void      printOccurrence(ostream &stream);
   void      printLapOccurrence(ostream &stream);
