@@ -2,15 +2,14 @@
 
 int Particle::numParticle;
 
-Particle::Particle(Site *inSite){
-  site = inSite;
-  site->setState(Site::OCCUPY);
-}
-
-void Particle::setSite(Site *inSite){
+Particle::Particle(unsigned long inSite){
   site = inSite;
 }
 
-Site *Particle::getSite(){
+void Particle::setSite(unsigned long inSite){
+  site = inSite;
+}
+
+unsigned long Particle::getSite(){
   return site;
 }

@@ -288,13 +288,13 @@ void KineticMC::loadPath(){
   {
     vector<Site>::size_type i;
     int j;
-    Site *sitePointer, *neighbor;
+    unsigned long neighbor;
     for(i=0;i<siteVector.size();i++){
-      sitePointer = &siteVector[i];
-      for(j=0;j<sitePointer->getNumNeighbor();j++){
-	neighbor = sitePointer->getNeighbor(j);
-	sitePointer->setPathTypeToNeighbor(j,
-	   findPathType(sitePointer->getSiteType(), neighbor->getSiteType()));
+      for(j=0;j<siteVector[i].getNumNeighbor();j++){
+	neighbor = siteVector[i].getNeighbor(j);
+	siteVector[i].setPathTypeToNeighbor(j,
+	   findPathType(siteVector[i].getSiteType(), 
+			siteVector[neighbor].getSiteType()));
       }
     }
   }
@@ -332,7 +332,8 @@ void KineticMC::loadParticle(){
 	random = (unsigned long)
 	  (getRandomNumber()*siteVector.size());
 	if(siteVector[random].getState()==Site::UNOCCUPY){
-	  particleVector.push_back(&siteVector[random]);
+	  particleVector.push_back(siteVector[random].getNum());
+	  siteVector[random].setState(Site::OCCUPY);
 	}else{
 	  j--;
 	}
@@ -343,7 +344,8 @@ void KineticMC::loadParticle(){
 		   &site[5],&site[6],&site[7],&site[8],&site[9]);
       for(i=0; i<num; i++){
 	if(siteVector[site[i]].getState()==Site::UNOCCUPY){
-	  particleVector.push_back(&siteVector[site[i]]);
+	  particleVector.push_back(siteVector[site[i]].getNum());
+	  siteVector[site[i]].setState(Site::OCCUPY);
 	}else{
 	  char error[LINE];
 	  sprintf(error,"Site[%lu] is already occupied!",site[i]); 
@@ -403,14 +405,14 @@ void KineticMC::createPathToExternalPhase(){
       iter2 = adsorptionTypeVector.begin();
       while(iter2!=adsorptionTypeVector.end()){
 	if(iter->getSiteType()==*iter2){
-	  adsorptionSiteVector.push_back(&(*iter));	
+	  adsorptionSiteVector.push_back(iter->getNum());	
 	}
 	iter2++;
       }
       iter2 = desorptionTypeVector.begin();
       while(iter2!=desorptionTypeVector.end()){
 	if(iter->getSiteType()==*iter2){
-	  desorptionSiteVector.push_back(&(*iter));
+	  desorptionSiteVector.push_back(iter->getNum());
 	}
 	iter2++;
       }
@@ -429,8 +431,8 @@ void KineticMC::createPathToExternalPhase(){
      !desorptionTypeVectorTwo.empty()){
     vector<Site>::iterator iter,iter2;
     vector<int>::iterator type;
-    vector<Site*> *neighbors;
-    vector<Site*>::iterator neighborIter;
+    vector<unsigned long> *neighbors;
+    vector<unsigned long>::iterator neighborIter;
 
     iter = siteVector.begin();
     while(iter!=siteVector.end()){
@@ -443,9 +445,9 @@ void KineticMC::createPathToExternalPhase(){
 	      neighbors = iter->getNeighborVector();
 	      neighborIter = neighbors->begin();
 	      while(neighborIter != neighbors->end()){
-		if(*neighborIter == &(*iter2)){
+		if(*neighborIter == iter2->getNum()){
 		  dissosiativeAdsorptionSiteVector
-		    .push_back(SitePair(&(*iter),&(*iter2)));
+	    .push_back(SitePair(iter->getNum(),iter2->getNum()));
 		  break;
 		}
 		neighborIter++;
@@ -461,9 +463,9 @@ void KineticMC::createPathToExternalPhase(){
 	      neighbors = iter->getNeighborVector();
 	      neighborIter = neighbors->begin();
 	      while(neighborIter != neighbors->end()){
-		if(*neighborIter == &(*iter2)){
+		if(*neighborIter == iter2->getNum()){
 		  recombinativeDesorptionSiteVector
-		    .push_back(SitePair(&(*iter),&(*iter2)));
+	    .push_back(SitePair(iter->getNum(),iter2->getNum()));
 		  break;
 		}
 		neighborIter++;
@@ -530,45 +532,8 @@ void KineticMC::mainLoop(){
 
     updateSystemTime();
     /*    printf ("%u th event!! Time: %e\n",i,systemTime);*/
-    eventVector[i].occur();
-    pathTypeVector[eventVector[i].getPathType()].occur();
-
-    if(eventVector[i].getEventType()==Event::DESORPTION){
-       vector<Particle>::iterator iter;
-       iter = particleVector.begin();
-       while(iter!=particleVector.end()){
-	 if( iter->getSite() == eventVector[i].getCurrentSite()){
-	   particleVector.erase(iter);
-	   break;
-	 }
-	 iter++;
-       }
-    }else if(eventVector[i].getEventType()==Event::ADSORPTION){
-      particleVector.push_back(eventVector[i].getCurrentSite());
-    }else if(eventVector[i].getEventType()
-	     ==Event::DISSOCIATIVE_ADSORPTION){
-      particleVector.push_back(eventVector[i].getCurrentSite());
-      particleVector.push_back(eventVector[i].getCurrentSite2());
-    }else if(eventVector[i].getEventType()
-	     ==Event::RECOMBINATIVE_DESORPTION){
-       vector<Particle>::iterator iter;
-       int num = 0;
-       iter = particleVector.begin();
-       while(iter!=particleVector.end()){
-	 if(num==2){
-	   break;
-	 }
-	 if( iter->getSite() == eventVector[i].getCurrentSite()){
-	   particleVector.erase(iter);
-	   num++;
-	 }else if( iter->getSite() == eventVector[i].getCurrentSite2()){
-	   particleVector.erase(iter);
-	   num++;
-	 }else{
-	   iter++;
-	 }
-       }
-     }
+    
+    eventOccur(i);
 
 
     if(step!=0&&step%displayOutputInterval==0){
@@ -600,7 +565,7 @@ void  KineticMC::countEvent(){
   vector<Particle>::size_type num;
   int i=0;
   int numNeighbor;
-  Site *sitePointer;
+  unsigned long site;
   int exType = findSiteType("Ex");
 
   sumRate=0.0;
@@ -608,21 +573,22 @@ void  KineticMC::countEvent(){
 
   for(num=0;num<particleVector.size();num++){
     i=0;
-    sitePointer = particleVector[num].getSite();
+    site = particleVector[num].getSite();
 
-    numNeighbor     = sitePointer->getRealNumNeighbor();
-    vector<Site*> *neighbors = sitePointer->getNeighborVector();
-    vector<Site*>::size_type count;
+    numNeighbor     = getRealNumNeighbor(site);
+    vector<unsigned long> *neighbors = 
+      siteVector[site].getNeighborVector();
+    vector<unsigned long>::size_type count;
     vector<int> *neighborPaths 
-      = sitePointer->getPathTypeToNeighborVector();
+      = siteVector[site].getPathTypeToNeighborVector();
 
     for(count=0;count<neighbors->size();count++){
-      if((*neighbors)[count]->getState()!=Site::OCCUPY){
+      if(siteVector[(*neighbors)[count]].getState()!=Site::OCCUPY){
 	int pathType=(*neighborPaths)[count];
 	rate = pathTypeVector[pathType].getRate()/numNeighbor;
 	eventVector.push_back(
 	      Event(rate,&particleVector[num],
-	    sitePointer,(*neighbors)[count],pathType));
+		    site,(*neighbors)[count],pathType));
 
 	sumRate += rate;
       }
@@ -631,11 +597,12 @@ void  KineticMC::countEvent(){
   }
 
   {
-    vector<Site*>::iterator iter;
+    vector<unsigned long>::iterator iter;
     iter = desorptionSiteVector.begin();
     while(iter != desorptionSiteVector.end()){
-      if((*iter)->getState()==Site::OCCUPY){
-	int pathType = findPathType((*iter)->getSiteType(),exType);
+      if(siteVector[*iter].getState()==Site::OCCUPY){
+	int pathType = 
+	  findPathType(siteVector[*iter].getSiteType(),exType);
 	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,
 				    *iter,pathType,Event::DESORPTION));
@@ -646,11 +613,12 @@ void  KineticMC::countEvent(){
   }
 
   {
-    vector<Site*>::iterator iter;
+    vector<unsigned long>::iterator iter;
     iter = adsorptionSiteVector.begin();
     while(iter != adsorptionSiteVector.end()){
-      if((*iter)->getState()==Site::UNOCCUPY){
-	int pathType = findPathType(exType, (*iter)->getSiteType());
+      if(siteVector[(*iter)].getState()==Site::UNOCCUPY){
+	int pathType = findPathType(exType, 
+			    siteVector[(*iter)].getSiteType());
 	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,
 				    *iter,pathType,Event::ADSORPTION));
@@ -662,14 +630,15 @@ void  KineticMC::countEvent(){
 
   {
     vector<SitePair>::iterator iter;
-    Site *site1, *site2;
+    unsigned long site1, site2;
     iter = recombinativeDesorptionSiteVector.begin();
     while(iter != recombinativeDesorptionSiteVector.end()){
       site1 = iter->getSite1();
       site2 = iter->getSite2();
-      if(site1->getState()==Site::OCCUPY &&
-	 site2->getState()==Site::OCCUPY){
-	int pathType = findPathType(site1->getSiteType(),exType);
+      if(siteVector[site1].getState()==Site::OCCUPY &&
+	 siteVector[site2].getState()==Site::OCCUPY){
+	int pathType = 
+	  findPathType(siteVector[site1].getSiteType(),exType);
 	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,NULL, site1,site2,
 		    pathType,Event::RECOMBINATIVE_DESORPTION));
@@ -681,14 +650,15 @@ void  KineticMC::countEvent(){
 
   {
     vector<SitePair>::iterator iter;
-    Site *site1, *site2;
+    unsigned long site1, site2;
     iter = dissosiativeAdsorptionSiteVector.begin();
     while(iter != dissosiativeAdsorptionSiteVector.end()){
       site1 = iter->getSite1();
       site2 = iter->getSite2();
-      if(site1->getState()==Site::UNOCCUPY &&
-	 site2->getState()==Site::UNOCCUPY){
-	int pathType = findPathType(exType, site1->getSiteType());
+      if(siteVector[site1].getState()==Site::UNOCCUPY &&
+	 siteVector[site2].getState()==Site::UNOCCUPY){
+	int pathType =
+	  findPathType(exType, siteVector[site1].getSiteType());
 	rate = pathTypeVector[pathType].getRate();
 	eventVector.push_back(Event(rate, NULL,NULL, site1,site2,
 		    pathType,Event::DISSOCIATIVE_ADSORPTION));
@@ -767,7 +737,7 @@ void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
     else if((i%10)==0) 
       fprintf (fp_out,"\n%5d ",(int)(step/fileOutputInterval));
     
-    fprintf (fp_out,"%5lu ",particleVector[i].getSite()->getNum());
+    fprintf (fp_out,"%5lu ",particleVector[i].getSite());
   }
   fprintf (fp_out,"\n");
   fflush(fp_out);
@@ -842,7 +812,8 @@ void  KineticMC::addSiteNeighbor(Site *site, Site *neighbor){
 void  KineticMC::loadPair( const char *line){
   int i,num,numPair;
   unsigned long pair[10][2];
-  Site *site1, *site2;
+  unsigned long site1, site2;
+  int type1, type2;
 
   num = sscanf(line, 
       "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu"
@@ -855,13 +826,13 @@ void  KineticMC::loadPair( const char *line){
     cout << "Wrong path!!" << endl;
   numPair = (int)((double)num/2.0);
   for(i=0;i<numPair;i++){
-    site1 = &siteVector[pair[i][0]];
-    site2 = &siteVector[pair[i][1]];
+    site1 = siteVector[pair[i][0]].getNum();
+    site2 = siteVector[pair[i][1]].getNum();
+    type1 = siteVector[pair[i][0]].getSiteType();
+    type2 = siteVector[pair[i][1]].getSiteType();
 
-    site1->addNeighbor(site2,
-	    findPathType(site1->getSiteType(),site2->getSiteType()));
-    site2->addNeighbor(site1,
-	    findPathType(site2->getSiteType(),site1->getSiteType()));
+    siteVector[pair[i][0]].addNeighbor(site2,findPathType(type1,type2));
+    siteVector[pair[i][1]].addNeighbor(site1,findPathType(type2,type1));
   }
 }
 
@@ -961,3 +932,93 @@ void KineticMC::clear(){
   recombinativeDesorptionSiteVector.clear();
 }
 
+int KineticMC::getRealNumNeighbor(int site){
+  vector<unsigned long> *neighbors;
+  vector<unsigned long>::size_type i;
+  neighbors = siteVector[site].getNeighborVector();
+  int num=0;
+  for(i=0;i<neighbors->size();i++){
+    if(siteVector[(*neighbors)[i]].getState()==Site::UNOCCUPY) num++;
+  }
+  return num;
+
+}
+
+void KineticMC::eventOccur(vector<Event>::size_type index){
+  
+  //eventVector[index].occur();
+  Event::enumEventType eventType = eventVector[index].getEventType();
+  Particle *particle      = eventVector[index].getParticle();
+  unsigned long currentSite = eventVector[index].getCurrentSite();
+  unsigned long currentSite2 = eventVector[index].getCurrentSite2();
+  unsigned long nextSite = eventVector[index].getNextSite();
+  
+  if(eventType==Event::DIFFUSION){
+    siteVector[currentSite].setState(Site::UNOCCUPY);
+    siteVector[nextSite].setState(Site::OCCUPY);
+    particle->setSite(nextSite);
+    
+  }else if(eventType==Event::DESORPTION){
+    siteVector[currentSite].setState(Site::UNOCCUPY);
+
+
+  }else if(eventType==Event::ADSORPTION){
+    //    currentSite->setState(Site::OCCUPY);
+    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
+
+
+  }else if(eventType==Event::DISSOCIATIVE_ADSORPTION){
+    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
+
+
+  }else if(eventType==Event::RECOMBINATIVE_DESORPTION){
+    siteVector[currentSite].setState(Site::UNOCCUPY);
+    siteVector[currentSite2].setState(Site::UNOCCUPY);
+  }
+
+  pathTypeVector[eventVector[index].getPathType()].occur();
+  
+  if(eventVector[index].getEventType()==Event::DESORPTION){
+    vector<Particle>::iterator iter;
+    iter = particleVector.begin();
+    while(iter!=particleVector.end()){
+      if( iter->getSite() == eventVector[index].getCurrentSite()){
+	particleVector.erase(iter);
+	break;
+      }
+      iter++;
+    }
+  }else if(eventVector[index].getEventType()==Event::ADSORPTION){
+    particleVector.push_back(eventVector[index].getCurrentSite());
+    siteVector[eventVector[index].getCurrentSite()]
+      .setState(Site::OCCUPY);
+  }else if(eventVector[index].getEventType()
+	   ==Event::DISSOCIATIVE_ADSORPTION){
+    particleVector.push_back(eventVector[index].getCurrentSite());
+    siteVector[eventVector[index].getCurrentSite()]
+      .setState(Site::OCCUPY);
+    
+    particleVector.push_back(eventVector[index].getCurrentSite2());
+    siteVector[eventVector[index].getCurrentSite2()]
+      .setState(Site::OCCUPY);
+  }else if(eventVector[index].getEventType()
+	   ==Event::RECOMBINATIVE_DESORPTION){
+    vector<Particle>::iterator iter;
+    int num = 0;
+    iter = particleVector.begin();
+    while(iter!=particleVector.end()){
+      if(num==2){
+	break;
+      }
+      if( iter->getSite() == eventVector[index].getCurrentSite()){
+	particleVector.erase(iter);
+	num++;
+      }else if( iter->getSite() == eventVector[index].getCurrentSite2()){
+	particleVector.erase(iter);
+	num++;
+      }else{
+	iter++;
+      }
+    }
+  }
+}

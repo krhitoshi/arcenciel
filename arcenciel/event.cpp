@@ -1,7 +1,7 @@
 #include "event.h"
 
 Event::Event(double inRate, Particle *inParticle,
-     Site *inCurrentSite, Site *inNextSite, int inPathType){
+     unsigned long inCurrentSite, unsigned long inNextSite, int inPathType){
   rate        = inRate;
   particle    = inParticle;
   currentSite = inCurrentSite;
@@ -11,7 +11,7 @@ Event::Event(double inRate, Particle *inParticle,
 }
 
 Event::Event(double inRate, Particle *inParticle,
-	     Site *inCurrentSite, int inPathType,
+	     unsigned long inCurrentSite, int inPathType,
 	     enumEventType inEventType){
   rate = inRate;
   particle = inParticle;
@@ -22,7 +22,7 @@ Event::Event(double inRate, Particle *inParticle,
 
 Event::Event(double inRate, 
 	     Particle *inParticle, Particle *inParticle2,
-	     Site *inCurrentSite, Site *inCurrentSite2,
+	     unsigned long inCurrentSite, unsigned long inCurrentSite2,
 	     int inPathType, enumEventType inEventType){
   rate = inRate;
   particle = inParticle;
@@ -45,40 +45,44 @@ Particle *Event::getParticle(){
   return particle;
 }
 
-Site *Event::getCurrentSite(){
+unsigned long Event::getCurrentSite(){
   return currentSite;
 }
 
-Site *Event::getCurrentSite2(){
+unsigned long Event::getCurrentSite2(){
   return currentSite2;
 }
 
 void Event::occur(){
-  if(eventType==DIFFUSION){
-    currentSite->setState(Site::UNOCCUPY);
-    nextSite->setState(Site::OCCUPY);
-    particle->setSite(nextSite);
+//    if(eventType==DIFFUSION){
+//      currentSite->setState(Site::UNOCCUPY);
+//      nextSite->setState(Site::OCCUPY);
+//      particle->setSite(nextSite);
 
 
-  }else if(eventType==DESORPTION){
-    currentSite->setState(Site::UNOCCUPY);
+//    }else if(eventType==DESORPTION){
+//      currentSite->setState(Site::UNOCCUPY);
 
 
-  }else if(eventType==ADSORPTION){
-    //    currentSite->setState(Site::OCCUPY);
-    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
+//    }else if(eventType==ADSORPTION){
+//
+//      /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
 
 
-  }else if(eventType==DISSOCIATIVE_ADSORPTION){
-    /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
+//    }else if(eventType==DISSOCIATIVE_ADSORPTION){
+//      /* 粒子を生成する際にOCCUPYにしているのでここでは設定不要 */
 
 
-  }else if(eventType==RECOMBINATIVE_DESORPTION){
-    currentSite->setState(Site::UNOCCUPY);
-    currentSite2->setState(Site::UNOCCUPY);
-  }
+//    }else if(eventType==RECOMBINATIVE_DESORPTION){
+//      currentSite->setState(Site::UNOCCUPY);
+//      currentSite2->setState(Site::UNOCCUPY);
+//    }
 }
 
 Event::enumEventType Event::getEventType(){
   return eventType;
+}
+
+unsigned long Event::getNextSite(){
+  return nextSite;
 }

@@ -19,30 +19,32 @@ class Event{
 
   Particle *particle;
   Particle *particle2;
-  Site     *currentSite;
-  Site     *currentSite2;
-  Site     *nextSite;
+  unsigned long currentSite;
+  unsigned long currentSite2;
+  unsigned long nextSite;
   int       pathType;
 
 
  public:
   Event(double inRate, Particle *inParticle,
-	Site *inCurrentSite, Site *inNextSite, int inPathType);
+	unsigned long inCurrentSite, unsigned long inNextSite,
+	int inPathType);
 
   Event(double inRate, Particle *inParticle,
-	Site *inCurrentSite, int inPathType,
+	unsigned long inCurrentSite, int inPathType,
 	enumEventType inEventType);
 
   Event(double inRate, Particle *inParticle, Particle *inParticle2,
-	Site *inCurrentSite, Site *inCurrentSite2,
+	unsigned long inCurrentSite, unsigned long inCurrentSite2,
 	int inPathType, enumEventType inEventType);
   enumEventType getEventType();
-  double    getRate();
-  void      occur();
-  Particle *getParticle();
-  Site     *getCurrentSite();
-  Site     *getCurrentSite2();
-  int       getPathType();
+  double        getRate();
+  void          occur();
+  Particle     *getParticle();
+  unsigned long getCurrentSite();
+  unsigned long getCurrentSite2();
+  unsigned long getNextSite();
+  int           getPathType();
 };
 
 #endif

@@ -14,16 +14,16 @@ using namespace std;
 
 class SitePair{
  private:
-  Site *site1, *site2;
+  unsigned long site1, site2;
  public:
-  SitePair(Site *inSite1, Site *inSite2){
+  SitePair(unsigned long inSite1, unsigned long inSite2){
     site1 = inSite1;
     site2 = inSite2;
   }
-  Site *getSite1(){
+  unsigned long getSite1(){
     return site1;
   }
-  Site *getSite2(){
+  unsigned long getSite2(){
     return site2;
   }
 };
@@ -53,8 +53,8 @@ class KineticMC{
 
   vector<Event>    eventVector;     /* イベント情報 */
 
-  vector<Site*>    adsorptionSiteVector;
-  vector<Site*>    desorptionSiteVector;
+  vector<unsigned long>    adsorptionSiteVector;
+  vector<unsigned long>    desorptionSiteVector;
   vector<SitePair> dissosiativeAdsorptionSiteVector;
   vector<SitePair> recombinativeDesorptionSiteVector;
 
@@ -99,6 +99,7 @@ class KineticMC{
   void loadPair( const char *line);
 
   void countEvent();
+  void eventOccur(vector<Event>::size_type index);
   
   void checkTopSurface();
   void checkButtomSurface();
@@ -109,6 +110,8 @@ class KineticMC{
   int findSiteTypeNoAppend(char *name);
   int addSiteType(char *name);
   int findPathType(int type1, int type2);
+
+  int getRealNumNeighbor(int site);
 };
 
 #endif

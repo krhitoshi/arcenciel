@@ -7,11 +7,11 @@
 class Particle{
  private:
   static int numParticle;
-  Site *site;
+  unsigned long site;
  public:
-  Particle(Site *inSite);
-  void  setSite(Site *inSite);
-  Site *getSite();
+  Particle(unsigned long inSite);
+  void  setSite(unsigned long inSite);
+  unsigned long getSite();
 };
 
 #endif

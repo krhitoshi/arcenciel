@@ -44,16 +44,7 @@ int Site::getNumNeighbor(){
   return numNeighbor;
 }
 
-int Site::getRealNumNeighbor(){
-  int num=0;
-  vector<Site*>::size_type i;
-  for(i=0;i<neighborVector.size();i++){
-    if(neighborVector[i]->getState()==Site::UNOCCUPY) num++;
-  }
-  return num;
-}
-
-Site *Site::getNeighbor(int index){
+unsigned long Site::getNeighbor(int index){
   return neighborVector[index];
 }
 
@@ -82,7 +73,7 @@ unsigned long Site::getNum(){
 }
 
 
-void Site::addNeighbor(Site *inNeighbor, int inPathType){
+void Site::addNeighbor(unsigned long inNeighbor, int inPathType){
   neighborVector.push_back(inNeighbor);
   pathTypeToNeighborVector.push_back(inPathType);
   numNeighbor++;
@@ -93,7 +84,7 @@ void Site::clearVectors(){
   pathTypeToNeighborVector.clear();
 }
 
-vector<Site*> *Site::getNeighborVector(){
+vector<unsigned long> *Site::getNeighborVector(){
   return &neighborVector;
 }
 

@@ -31,7 +31,7 @@ class Site{
  private:
   static  int numSite;            /* サイトの総数 */
 
-  vector<Site*>     neighborVector;
+  vector<unsigned long>     neighborVector;
   vector<int> pathTypeToNeighborVector;
 
   unsigned long num;              /* 番号 */
@@ -45,15 +45,14 @@ class Site{
   void clearVectors();
   unsigned long getNum();
   int  getNumNeighbor();
-  int  getRealNumNeighbor();
-  Site *getNeighbor(int index);
+  unsigned long getNeighbor(int index);
   void setPathTypeToNeighbor(int index, int inPathType);
   int  getPathTypeToNeighbor(int index);
   int            getSiteType();
   enumSiteState  getState();
   void           setState(enumSiteState value);
-  void           addNeighbor(Site *inNeighbor, int inPathType);
-  vector<Site*>     *getNeighborVector();
+  void           addNeighbor(unsigned long inNeighbor, int inPathType);
+  vector<unsigned long>     *getNeighborVector();
   vector<int>   *getPathTypeToNeighborVector();
 };
 
