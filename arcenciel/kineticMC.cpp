@@ -47,13 +47,6 @@ void KineticMC::initialize(){
 
   systemTime = 0.0;
 
-  siteTypeNum = 0;
-  siteTypeNumMax = 1;
-  siteType = (struct siteTypeInformation *)
-    calloc(siteTypeNumMax,sizeof(struct siteTypeInformation));
-  if(siteType==NULL) 
-    fatalError("Cannot allocate memory for the site types!");
-
   pathTypeNum = 0;
   pathTypeNumMax = 1;
   pathType = (struct pathTypeInformation *)
@@ -132,7 +125,7 @@ void KineticMC::loadRate(){
   char name1[NAME_LIMIT],name2[NAME_LIMIT];
   int count,num;
   double frequency,activEnergy;
-  struct siteTypeInformation *siteType1, *siteType2;
+  SiteType *siteType1, *siteType2;
 
   if( ( fp = fopen( fileName, "r" ) ) == NULL ) fileOpenError(fileName);
   count=1;
@@ -232,9 +225,9 @@ void KineticMC::loadSite(){
 	   ,cell.a,cell.b,cell.c);
     printf("Cell Parameters[Deg]: alpha=%7.4f beta=%7.4f gamma=%7.4f\n"
 	   ,cell.alpha,cell.beta,cell.gamma);
-    for(j=0;j<siteTypeNum;j++){
-      printf("Site Type %3d: %s\n",siteType[j].getNum(),
-	     siteType[j].getName().c_str());
+    for(j=0;j<SiteType::getNumSiteType();j++){
+      printf("Site Type %3d: %s\n",siteTypeVector[j].getNum(),
+	     siteTypeVector[j].getName().c_str());
     }
   }
 }
@@ -249,7 +242,7 @@ void KineticMC::loadSiteType(){
   int count;
   char name[NAME_LIMIT];
   int num;
-  struct siteTypeInformation *siteType;
+  SiteType *siteType;
   
   if( ( fp = fopen( fileName, "r" ) ) == NULL ) fileOpenError(fileName);
 
@@ -262,7 +255,7 @@ void KineticMC::loadSiteType(){
       num = sscanf(line, "%s",name);
       if ( num != 1 ) printf("Wrong coordination!!\n");
       
-      if(siteTypeNum==0){
+      if(SiteType::getNumSiteType()==0){
 	siteType = addSiteType(name);
       }else{
 	siteType = findSiteType(name);
@@ -341,7 +334,6 @@ void KineticMC::mainLoop(){
   fclose(fp_out);
   fclose(fp_time);
   cout << "##############  End  ##############\n";
-
 }
 
 /*-----------------------------------------------*/
@@ -436,7 +428,7 @@ void  KineticMC::loadCoordination( const char *line){
   num = sscanf(line, "%s %f %f %f",name,&pos.x,&pos.y,&pos.z);
   if ( num != 4 ) printf("Wrong coordination!!\n");
 
-  struct siteTypeInformation *foundSiteType = findSiteType(name);
+  SiteType *foundSiteType = findSiteType(name);
   struct siteInformation *newSite = &site[siteCount];
 
   newSite->num = siteCount;
@@ -522,31 +514,19 @@ void  KineticMC::loadPair( const char *line){
 /*-----------------------------------------------*/
 /*         site typeの追加                       */
 /*-----------------------------------------------*/
-struct siteTypeInformation*  KineticMC::addSiteType(char *name){
-  siteTypeNum++;
-  if(siteTypeNum>siteTypeNumMax){
-    int initNumMax;
-    initNumMax = siteTypeNumMax;
-    siteTypeNumMax += 10;
-    siteType = (struct siteTypeInformation *)
-      realloc(siteType,siteTypeNumMax*sizeof(struct siteTypeInformation));
-    if(siteType==NULL) 
-      fatalError("Cannot allocate memory for the site types!");
-
-  }
-  siteType[siteTypeNum-1].setName(string(name));
-  siteType[siteTypeNum-1].setNum(siteTypeNum-1);
+SiteType*  KineticMC::addSiteType(char *name){
+  siteTypeVector.push_back(SiteType(name));
 
   /*  printf ("%d %s \n",siteType[siteTypeNum-1].num,
       siteType[siteTypeNum-1].name);*/
-  return &siteType[siteTypeNum-1];
+  return &siteTypeVector[SiteType::getNumSiteType()-1];
 }
 
 /*-----------------------------------------------*/
 /*         pair typeの追加                       */
 /*-----------------------------------------------*/
-struct pathTypeInformation*  KineticMC::addPathType(struct siteTypeInformation *type1
-				 , struct siteTypeInformation *type2){
+struct pathTypeInformation*  KineticMC::addPathType(SiteType *type1
+				 , SiteType *type2){
 
   struct pathTypeInformation *newPathType;
   pathTypeNum++;
@@ -574,12 +554,13 @@ struct pathTypeInformation*  KineticMC::addPathType(struct siteTypeInformation *
 /*-----------------------------------------------*/
 /*         site typeの検索                       */
 /*-----------------------------------------------*/
-struct siteTypeInformation*  KineticMC::findSiteType(char *name){
+SiteType*  KineticMC::findSiteType(char *name){
   int i;
-  for(i=0;i<siteTypeNum;i++){
-    if(string(name) == siteType[i].getName()) return &siteType[i];
+  for(i=0;i<SiteType::getNumSiteType();i++){
+    if(string(name) == siteTypeVector[i].getName()) 
+      return &siteTypeVector[i];
   }
-  printf ("Cannot find!! site type\n");
+  cout << "Adding a new site type" << endl;
   return addSiteType(name);  
 }
 
@@ -587,8 +568,8 @@ struct siteTypeInformation*  KineticMC::findSiteType(char *name){
 /*         pair typeの検索                       */
 /*-----------------------------------------------*/
 struct pathTypeInformation*  KineticMC::findPathType
-(struct siteTypeInformation *type1
- ,struct siteTypeInformation *type2){
+(SiteType *type1
+ ,SiteType *type2){
   int i;
   for(i=0;i<pathTypeNum;i++){
     if((pathType[i].type[0]->getNum()==type1->getNum()

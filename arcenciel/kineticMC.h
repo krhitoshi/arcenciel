@@ -24,13 +24,11 @@ class KineticMC{
 
   int seedType;
   cellPara cell;
+
   unsigned long numSite;
   struct siteInformation *site;
 
-  vector<siteTypeInformation> siteTypeVector;
-
-  int siteTypeNum, siteTypeNumMax;
-  struct siteTypeInformation *siteType;
+  vector<SiteType> siteTypeVector;
 
   unsigned long numPath;
 
@@ -68,16 +66,16 @@ class KineticMC{
   void addSiteNeighbor(struct siteInformation *site,
 	     struct siteInformation *neighbor);
   double getRandomNumber();
-  struct siteTypeInformation* findSiteType(char *name);
-  struct siteTypeInformation* addSiteType(char *name);
+  SiteType* findSiteType(char *name);
+  SiteType* addSiteType(char *name);
 
   struct pathTypeInformation*
-    findPathType(struct siteTypeInformation *type1
-		 , struct siteTypeInformation *type2);
+    findPathType(SiteType *type1
+		 , SiteType *type2);
 
   struct pathTypeInformation* 
-    addPathType(struct siteTypeInformation *type1
-		, struct siteTypeInformation *type2);
+    addPathType(SiteType *type1
+		, SiteType *type2);
 
   void countEvent(void);
    

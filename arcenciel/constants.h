@@ -4,7 +4,7 @@
 /*************************************************/
 /*         プログラム名 バージョン               */
 /*************************************************/
-const char * const PROGRAM_NAME = "ARC ver. 0.12";
+const char * const PROGRAM_NAME = "ARC ver. 0.2";
 
 const int LINE       = 1024;
 const int NAME_LIMIT = 10;

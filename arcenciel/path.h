@@ -4,7 +4,7 @@
 /*---- パスの種類 ----*/
 struct pathTypeInformation{
   int num;
-  struct siteTypeInformation *type[2];
+  SiteType *type[2];
   double activEnergy, frequency, rate;
 };
 
