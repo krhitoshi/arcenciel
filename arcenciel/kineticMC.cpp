@@ -4,6 +4,7 @@
 #include <math.h>
 #include <time.h>
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 #include "common.h"
@@ -11,6 +12,18 @@ using namespace std;
 
 KineticMC::KineticMC(){
   initialize();
+}
+
+void KineticMC::mainProcedure(){
+  loadInputFile();
+  loadSite();
+  printSiteInformation();
+
+  loadRate();
+  loadPath();
+  printInputData();
+  putParticles();
+  mainLoop();
 }
 
 /*************************************************/
@@ -122,7 +135,7 @@ void KineticMC::loadRate(){
   FILE *fp;
   char fileName[]="rate.kmc";
   char line[LINE];
-  char name1[NAME_LIMIT],name2[NAME_LIMIT];
+  char name1[LINE],name2[LINE];
   int count,num;
   double frequency,activEnergy;
   SiteType *siteType1, *siteType2;
@@ -150,7 +163,6 @@ void KineticMC::loadRate(){
     }
   }
 }
-
 
 /*-----------------------------------------------*/
 /*         path情報の読み込み                    */
@@ -203,7 +215,8 @@ void KineticMC::loadSite(){
 
   loadSiteType();
 
-  if( ( fp = fopen( fileName, "r" ) ) == NULL ) fileOpenError(fileName);
+  if( ( fp = fopen( fileName, "r" ) ) == NULL ) 
+    fileOpenError(fileName);
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
@@ -218,17 +231,26 @@ void KineticMC::loadSite(){
 
   fclose(fp);
 
-  {
-    int j;
-    printf("Number of Site : %lu\n",numSite);
-    printf("Cell Parameters[Ang]:     a=%7.4f    b=%7.4f     c=%7.4f\n"
-	   ,cell.a,cell.b,cell.c);
-    printf("Cell Parameters[Deg]: alpha=%7.4f beta=%7.4f gamma=%7.4f\n"
-	   ,cell.alpha,cell.beta,cell.gamma);
-    for(j=0;j<SiteType::getNumSiteType();j++){
-      printf("Site Type %3d: %s\n",siteTypeVector[j].getNum(),
-	     siteTypeVector[j].getName().c_str());
-    }
+}
+
+void KineticMC::printSiteInformation(){
+  cout << "Number of Site      : " << numSite << endl;
+  cout.setf(ios::fixed);
+  cout.precision(4);
+  
+  cout << "Cell Parameters[Ang]: "
+       << "      a=" << setw(10) << cell.a 
+       << ",     b=" << setw(10) << cell.b
+       << ",     c=" << setw(10) << cell.c << endl;
+  cout << "Cell Parameters[Deg]: "
+       << "  alpha=" << setw(10) << cell.alpha
+       << ",  beta=" << setw(10) << cell.beta
+       << ", gamma=" << setw(10) << cell.gamma << endl;
+
+  vector<SiteType>::size_type i;
+  for(i=0;i<siteTypeVector.size();i++){
+    cout << "Site Type " << setw(3) << siteTypeVector[i].getNum()
+	 << ": "<< siteTypeVector[i].getName() << endl;
   }
 }
 
@@ -240,7 +262,7 @@ void KineticMC::loadSiteType(){
   char fileName[]="site.kmc";
   char line[LINE];
   int count;
-  char name[NAME_LIMIT];
+  char name[LINE];
   int num;
   SiteType *siteType;
   
@@ -422,7 +444,7 @@ void  KineticMC::loadCellParameters( const char *line){
 void  KineticMC::loadCoordination( const char *line){
   static unsigned long siteCount;
   struct position3D pos;
-  char name[NAME_LIMIT];
+  char name[LINE];
   int num;
 
   num = sscanf(line, "%s %f %f %f",name,&pos.x,&pos.y,&pos.z);

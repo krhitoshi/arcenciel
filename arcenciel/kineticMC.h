@@ -47,10 +47,13 @@ class KineticMC{
 
  public:
   KineticMC();
+  void mainProcedure();
   void printProgramName();
   void loadInputFile();
   void printInputData();
   void loadSite();
+  void printCell();
+  void printSiteInformation();
   void loadPath();
   void loadRate();
   void loadSiteType();

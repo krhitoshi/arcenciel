@@ -25,14 +25,7 @@ int main(int argc, char *argv[]){
   arc.printProgramName();
   if(argc==2 && option == argv[1]) exit(0);
 
-  arc.loadInputFile();
-  arc.printInputData();
-  arc.loadSite();
-  arc.loadRate();
-  arc.loadPath();
-
-  arc.putParticles();
-  arc.mainLoop();
+  arc.mainProcedure();
   
   return 0;
 }
