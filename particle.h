@@ -3,7 +3,7 @@
 
 #include "site.h"
 
-/*---- Î³»Ò¾ğÊó ----*/
+/*---- ç²’å­æƒ…å ± ----*/
 class Particle{
  private:
   static int numParticle;
@@ -14,12 +14,12 @@ class Particle{
   unsigned long getSite();
 };
 
-/*---- Î³»Ò¿ô¤ò°ìÄê¤ËÊİ¤Ä¤¿¤á¤Î¾ğÊó ----*/
+/*---- ç²’å­æ•°ã‚’ä¸€å®šã«ä¿ã¤ãŸã‚ã®æƒ…å ± ----*/
 class KeepNumParticleConst{
  private:
-  unsigned long numParticle;      /* Î³»Ò¿ô */
-  int           particleType;     /* Î³»Ò¼ï(»ÈÍÑ¤·¤Ê¤¤) */
-  int           siteType;         /* ¥µ¥¤¥È¼ï */
+  unsigned long numParticle;      /* ç²’å­æ•° */
+  int           particleType;     /* ç²’å­ç¨®(ä½¿ç”¨ã—ãªã„) */
+  int           siteType;         /* ã‚µã‚¤ãƒˆç¨® */
   int           interval;
   vector<unsigned long>  siteVector;
 

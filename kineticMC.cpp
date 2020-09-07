@@ -13,54 +13,54 @@ using namespace std;
 #include "path.h"
 
 /*************************************************/
-/*         ¥×¥í¥°¥é¥àÌ¾ ¥Ğ¡¼¥¸¥ç¥ó               */
+/*         ãƒ—ãƒ­ã‚°ãƒ©ãƒ å ãƒãƒ¼ã‚¸ãƒ§ãƒ³               */
 /*************************************************/
 const char * const PROGRAM_NAME = "ARC ver. 0.38";
 const char * const COPYRIGHT_STRING = 
 "Copyright (C) 2002-2004 Hitoshi Kurokawa";
 
 /*-----------------------------------------------*/
-/*         ¥³¥ó¥¹¥È¥é¥¯¥¿                        */
+/*         ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿                        */
 /*-----------------------------------------------*/
 KineticMC::KineticMC(){
-  initialize(); /* ·×»»¥Ñ¥é¥á¡¼¥¿¤Î½é´ü²½ */
+  initialize(); /* è¨ˆç®—ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®åˆæœŸåŒ– */
 }
 
 /*-----------------------------------------------*/
-/*         ¥á¥¤¥ó                                */
+/*         ãƒ¡ã‚¤ãƒ³                                */
 /*-----------------------------------------------*/
 bool KineticMC::mainProcedure(){
   try{
-    /* ÆÃ¼ì¥µ¥¤¥È¼ï Ex¤ÎÄÉ²Ã
-       µ¤Áê(Ex)¤«¤é¤Î¥µ¥¤¥È¤Ø¤ÎÎ³»ÒµÛÃå¤òÉ½¤¹¥Ñ¥¹¤ÎÀßÄê¤Ë»ÈÍÑ */
+    /* ç‰¹æ®Šã‚µã‚¤ãƒˆç¨® Exã®è¿½åŠ 
+       æ°—ç›¸(Ex)ã‹ã‚‰ã®ã‚µã‚¤ãƒˆã¸ã®ç²’å­å¸ç€ã‚’è¡¨ã™ãƒ‘ã‚¹ã®è¨­å®šã«ä½¿ç”¨ */
     siteTypeVector.push_back(SiteType("Ex"));
 
-    loadInputFile();        /* ·×»»¾ò·ï¤ÎÆÉ¤ß¹ş¤ß */
+    loadInputFile();        /* è¨ˆç®—æ¡ä»¶ã®èª­ã¿è¾¼ã¿ */
 
-    loadSite();             /* ¥µ¥¤¥È¾ğÊó¤ÎÆÉ¤ß¹ş¤ß */
-    printSiteInformation(); /* ¥µ¥¤¥È¾ğÊó¤Î½ĞÎÏ*/
+    loadSite();             /* ã‚µã‚¤ãƒˆæƒ…å ±ã®èª­ã¿è¾¼ã¿ */
+    printSiteInformation(); /* ã‚µã‚¤ãƒˆæƒ…å ±ã®å‡ºåŠ›*/
 
-    loadRate();             /* rate¾ğÊó¤ÎÆÉ¤ß¹ş¤ß */
-    printRateInformation(); /* rate¾ğÊó¤Î½ĞÎÏ */
+    loadRate();             /* rateæƒ…å ±ã®èª­ã¿è¾¼ã¿ */
+    printRateInformation(); /* rateæƒ…å ±ã®å‡ºåŠ› */
 
-    loadPath();             /* ¥Ñ¥¹¾ğÊó¤ÎÆÉ¤ß¹ş¤ß */
+    loadPath();             /* ãƒ‘ã‚¹æƒ…å ±ã®èª­ã¿è¾¼ã¿ */
 
-    /* rate¾ğÊó¤Ë¤ª¤¤¤Æµ¤Áê(Ex)¤È¥Ñ¥¹¤¬ÀßÄê¤µ¤ì¤Æ¤¤¤ë¾ì¹ç¤Ë
-       ¿·¤¿¤ËEx¤È¤Î¥Ñ¥¹¾ğÊó¤òºîÀ®¤¹¤ë */
+    /* rateæƒ…å ±ã«ãŠã„ã¦æ°—ç›¸(Ex)ã¨ãƒ‘ã‚¹ãŒè¨­å®šã•ã‚Œã¦ã„ã‚‹å ´åˆã«
+       æ–°ãŸã«Exã¨ã®ãƒ‘ã‚¹æƒ…å ±ã‚’ä½œæˆã™ã‚‹ */
     createPathToExternalPhase();    
 
-    loadParticle();         /* Î³»Ò½é´üÇÛÃÖ¤ÎÆÉ¤ß¹ş¤ß¤ÈÇÛÃÖ */
+    loadParticle();         /* ç²’å­åˆæœŸé…ç½®ã®èª­ã¿è¾¼ã¿ã¨é…ç½® */
 
-    printInputData();       /* ÆşÎÏ¥Ç¡¼¥¿¤Î½ĞÎÏ */
+    printInputData();       /* å…¥åŠ›ãƒ‡ãƒ¼ã‚¿ã®å‡ºåŠ› */
 
-    mainLoop();             /* ¥­¥Í¥Æ¥£¥Ã¥¯¥â¥ó¥Æ¥«¥ë¥í·×»»³«»Ï */
+    mainLoop();             /* ã‚­ãƒãƒ†ã‚£ãƒƒã‚¯ãƒ¢ãƒ³ãƒ†ã‚«ãƒ«ãƒ­è¨ˆç®—é–‹å§‹ */
     clear();
   }
 
-  /* ¥¨¥é¡¼½èÍı */
+  /* ã‚¨ãƒ©ãƒ¼å‡¦ç† */
   catch(string errorString){
     cout << "Error: " << errorString << endl;
-    clear(); /* ¥á¥â¥ê¤Î²òÊü */
+    clear(); /* ãƒ¡ãƒ¢ãƒªã®è§£æ”¾ */
     return false; 
   }
 
@@ -68,7 +68,7 @@ bool KineticMC::mainProcedure(){
 }
 
 /*-----------------------------------------------*/
-/*         ¥×¥í¥°¥é¥àÌ¾¤ÎÉ½¼¨                    */
+/*         ãƒ—ãƒ­ã‚°ãƒ©ãƒ åã®è¡¨ç¤º                    */
 /*-----------------------------------------------*/
 void KineticMC::printProgramName(){
   if(silentFlag) return;
@@ -77,7 +77,7 @@ void KineticMC::printProgramName(){
 }
 
 /*-----------------------------------------------*/
-/*         ¥Ñ¥é¥á¡¼¥¿¤Î½é´ü²½                    */
+/*         ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®åˆæœŸåŒ–                    */
 /*-----------------------------------------------*/
 void KineticMC::initialize(){
   seedType              = 0;
@@ -92,7 +92,7 @@ void KineticMC::initialize(){
   systemTime    = 0.0;
   lapSystemTime = 0.0;
 
-  /* ÆşÎÏ¥Õ¥¡¥¤¥ëÌ¾ */
+  /* å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«å */
   siteFileName     = "site.kmc";
   pathFileName     = "path.kmc";
   rateFileName     = "rate.kmc";
@@ -100,7 +100,7 @@ void KineticMC::initialize(){
 }
 
 /*-----------------------------------------------*/
-/*         É¸½à½ĞÎÏ¤ÎÀßÄê                        */
+/*         æ¨™æº–å‡ºåŠ›ã®è¨­å®š                        */
 /*-----------------------------------------------*/
 void KineticMC::silentFlagOn(){
   silentFlag = true;
@@ -111,7 +111,7 @@ void KineticMC::silentFlagOff(){
 }
 
 /*-----------------------------------------------*/
-/*         ·×»»¾ò·ï¤ÎÆÉ¤ß¹ş¤ß input.kmc          */
+/*         è¨ˆç®—æ¡ä»¶ã®èª­ã¿è¾¼ã¿ input.kmc          */
 /*-----------------------------------------------*/
 void KineticMC::loadInputFile(){
   FILE *fp;
@@ -131,7 +131,7 @@ void KineticMC::loadInputFile(){
   
   countLine = 1;
   while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* ¥³¥á¥ó¥È¥¢¥¦¥È½èÍı */
+    if(line[0]=='#') continue; /* ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆå‡¦ç† */
     keyFlag=intFlag=doubleFlag=charFlag=false;
 
     if(sscanf(line,"%s",key)==1) keyFlag=true;
@@ -186,16 +186,16 @@ void KineticMC::loadInputFile(){
   }
 
   if(seedType==0){
-    srand(time(NULL)); /* Íğ¿ô¤Î¼ï¤ò¸½ºß¤Î»ş´Ö¤È¤¹¤ë */
+    srand(time(NULL)); /* ä¹±æ•°ã®ç¨®ã‚’ç¾åœ¨ã®æ™‚é–“ã¨ã™ã‚‹ */
   }else{
-    srand(seedType);   /* 0°Ê³°¤ÎÃÍ¤Ê¤é¤Ğ¤½¤ì¤òÍğ¿ô¤Î¼ï¤È¤¹¤ë */  
+    srand(seedType);   /* 0ä»¥å¤–ã®å€¤ãªã‚‰ã°ãã‚Œã‚’ä¹±æ•°ã®ç¨®ã¨ã™ã‚‹ */  
   }
 
   fclose(fp);
 }
 
 /*-----------------------------------------------*/
-/*         site¾ğÊó¤ÎÆÉ¤ß¹ş¤ß site.kmc           */
+/*         siteæƒ…å ±ã®èª­ã¿è¾¼ã¿ site.kmc           */
 /*-----------------------------------------------*/
 void KineticMC::loadSite(){
   FILE *fp;
@@ -209,22 +209,22 @@ void KineticMC::loadSite(){
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* ¥³¥á¥ó¥È¥¢¥¦¥È½èÍı */
+    if(line[0]=='#') continue; /* ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆå‡¦ç† */
 
     if( count == 1 )
-      ;                         /* °ì¹ÔÌÜ¤Ï¥¹¥­¥Ã¥×(¥¿¥¤¥È¥ëÅù) */
+      ;                         /* ä¸€è¡Œç›®ã¯ã‚¹ã‚­ãƒƒãƒ—(ã‚¿ã‚¤ãƒˆãƒ«ç­‰) */
     else if( count == 2 )
-      loadCellParameters(line); /* ¥»¥ë¥Ñ¥é¥á¡¼¥¿¤ÎÆÉ¤ß¹ş¤ß */
+      loadCellParameters(line); /* ã‚»ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®èª­ã¿è¾¼ã¿ */
     else
-      loadCoordination(line);   /* ¥µ¥¤¥È¼ï, ºÂÉ¸¤ÎÆÉ¤ß¹ş¤ß */
+      loadCoordination(line);   /* ã‚µã‚¤ãƒˆç¨®, åº§æ¨™ã®èª­ã¿è¾¼ã¿ */
     count++;
   }
   fclose(fp);
 }
 
 /*-----------------------------------------------*/
-/*         rate¾ğÊó¤ÎÆÉ¤ß¹ş¤ß rate.kmc           */
-/*         path¼ï, rate, ³èÀ­²½¥¨¥Í¥ë¥®¡¼        */
+/*         rateæƒ…å ±ã®èª­ã¿è¾¼ã¿ rate.kmc           */
+/*         pathç¨®, rate, æ´»æ€§åŒ–ã‚¨ãƒãƒ«ã‚®ãƒ¼        */
 /*-----------------------------------------------*/
 void KineticMC::loadRate(){
   FILE *fp;
@@ -241,7 +241,7 @@ void KineticMC::loadRate(){
     }
 
   while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* ¥³¥á¥ó¥È¥¢¥¦¥È½èÍı */
+    if(line[0]=='#') continue; /* ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆå‡¦ç† */
     num = sscanf(line, "%s %s %lf %lf %lf",
 		 name1,name2,&frequency,&activEnergy,&distance);
 
@@ -263,7 +263,7 @@ void KineticMC::loadRate(){
 }
 
 /*-----------------------------------------------*/
-/*         path¾ğÊó¤ÎÆÉ¤ß¹ş¤ß path.kmc           */
+/*         pathæƒ…å ±ã®èª­ã¿è¾¼ã¿ path.kmc           */
 /*-----------------------------------------------*/
 void KineticMC::loadPath(){
   FILE *fp;
@@ -277,7 +277,7 @@ void KineticMC::loadPath(){
 
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* ¥³¥á¥ó¥È¥¢¥¦¥È½èÍı */
+    if(line[0]=='#') continue; /* ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆå‡¦ç† */
 
     if( count == 1 )
       ;
@@ -301,7 +301,7 @@ void KineticMC::loadPath(){
 }
 
 /*-----------------------------------------------*/
-/*       Î³»Ò½é´üÇÛÃÖ¾ğÊó¤ÎÆÉ¤ß¹ş¤ß particle.kmc */
+/*       ç²’å­åˆæœŸé…ç½®æƒ…å ±ã®èª­ã¿è¾¼ã¿ particle.kmc */
 /*-----------------------------------------------*/
 void KineticMC::loadParticle(){
   FILE *fp;
@@ -320,11 +320,11 @@ void KineticMC::loadParticle(){
   unsigned long j;
   count=1;
   while( fgets( line, LINE, fp ) != NULL ){
-    if(line[0]=='#') continue; /* ¥³¥á¥ó¥È¥¢¥¦¥È½èÍı */
+    if(line[0]=='#') continue; /* ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆå‡¦ç† */
     sscanf(line,"%s",key);
     keyString = key;
 
-    if(keyString=="Random"){  /* ¥é¥ó¥À¥à¤ËÎ³»Ò¤òÇÛÃÖ */
+    if(keyString=="Random"){  /* ãƒ©ãƒ³ãƒ€ãƒ ã«ç²’å­ã‚’é…ç½® */
       unsigned long numRandomParticle;
       unsigned long random;
       sscanf(line,"%*s %*s %lu",&numRandomParticle);
@@ -339,10 +339,10 @@ void KineticMC::loadParticle(){
       }
     }else if(keyString=="RandomConst"){  
 
-      /* ÆÃÄê¥µ¥¤¥È¼ï¤ËÎ³»Ò¤ò¥é¥ó¥À¥à¤ËÇÛÃÖ¤·Î³»Ò¿ô¤ò°ìÄê¤ËÊİ¤Ä */
+      /* ç‰¹å®šã‚µã‚¤ãƒˆç¨®ã«ç²’å­ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã«é…ç½®ã—ç²’å­æ•°ã‚’ä¸€å®šã«ä¿ã¤ */
       keepNumParticleRandomConst(line);
 
-    }else{                   /* ÆÃÄê¥µ¥¤¥È¤ËÎ³»Ò¤òÇÛÃÖ */
+    }else{                   /* ç‰¹å®šã‚µã‚¤ãƒˆã«ç²’å­ã‚’é…ç½® */
       num = sscanf(line,"%*s %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
 		   &site[0],&site[1],&site[2],&site[3],&site[4],
 		   &site[5],&site[6],&site[7],&site[8],&site[9]);
@@ -391,7 +391,7 @@ void KineticMC::keepNumParticleRandomConst(const char *line){
     .push_back(KeepNumParticleConst
 	       (siteType,numRandomParticle,interval));
 
-  /* ¥µ¥¤¥ÈÈÖ¹æ¤òÊİÂ¸ */
+  /* ã‚µã‚¤ãƒˆç•ªå·ã‚’ä¿å­˜ */
   iter = siteVector.begin();
   while(iter!=siteVector.end()){
     if(iter->getSiteType()==siteType){
@@ -416,7 +416,7 @@ void KineticMC::keepNumParticleRandomConst(const char *line){
 }
 
 /*-----------------------------------------------*/
-/*         ÆşÎÏ¾ğÊó¤Î½ĞÎÏ                        */
+/*         å…¥åŠ›æƒ…å ±ã®å‡ºåŠ›                        */
 /*-----------------------------------------------*/
 void KineticMC::printInputData(){
   if(silentFlag) return;
@@ -546,14 +546,14 @@ void KineticMC::createPathToExternalPhase(){
 }
 
 /*-----------------------------------------------*/
-/*         ¥á¥¤¥ó¥ë¡¼¥×                          */
+/*         ãƒ¡ã‚¤ãƒ³ãƒ«ãƒ¼ãƒ—                          */
 /*-----------------------------------------------*/
 void KineticMC::mainLoop(){
   int step;
   long double eventRandom;
   vector<Event>::size_type selectedEvent;  
 
-  /* ½ĞÎÏ¥Õ¥¡¥¤¥ë¥ª¡¼¥×¥ó */
+  /* å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ¼ãƒ—ãƒ³ */
   FILE *fp_out, *fp_time;
   if( ( fp_out = fopen( "out.kmc", "w" )  ) == NULL ) 
     throw(string("Cannot Open! out.kmc"));
@@ -572,26 +572,26 @@ void KineticMC::mainLoop(){
   printOccurrence(0,occurrenceStream);
 
   /*------------------------*/
-  /*---- ¥ë¡¼¥×¥¹¥¿¡¼¥È ----*/
+  /*---- ãƒ«ãƒ¼ãƒ—ã‚¹ã‚¿ãƒ¼ãƒˆ ----*/
   /*------------------------*/
   if(!silentFlag)
     cout << "  STEP      TIME     LAPTIME    PARTICLES\n";
 
-  /* ¥¹¥Æ¥Ã¥×¿ô¤Ï1¤«¤é¥«¥¦¥ó¥È¤¹¤ë */
+  /* ã‚¹ãƒ†ãƒƒãƒ—æ•°ã¯1ã‹ã‚‰ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹ */
   for(step=1;step<numStep+1;step++){
-    /* ¥¤¥Ù¥ó¥È¥¯¥ê¥¢ */
+    /* ã‚¤ãƒ™ãƒ³ãƒˆã‚¯ãƒªã‚¢ */
     if(eventVector.size()!=0) eventVector.clear();
 
-    /* Î³»Ò¿ô¤ÎÊÑ¹¹ */
+    /* ç²’å­æ•°ã®å¤‰æ›´ */
     if(keepNumParticleConstVector.size()!=0) changeNumParticle(step);
 
 
-    countEvent();            /* ¥¤¥Ù¥ó¥È¥ê¥¹¥È¤ÎºîÀ® */
+    countEvent();            /* ã‚¤ãƒ™ãƒ³ãƒˆãƒªã‚¹ãƒˆã®ä½œæˆ */
 
 
-    eventRandom = getRandomNumber()*sumRate;  /* Íğ¿ôÈ¯À¸ */
+    eventRandom = getRandomNumber()*sumRate;  /* ä¹±æ•°ç™ºç”Ÿ */
 
-    /* Íğ¿ô¤«¤é¥¤¥Ù¥ó¥ÈÁªÂò */
+    /* ä¹±æ•°ã‹ã‚‰ã‚¤ãƒ™ãƒ³ãƒˆé¸æŠ */
     for(selectedEvent=0;
 	selectedEvent<eventVector.size();
 	selectedEvent++){
@@ -599,8 +599,8 @@ void KineticMC::mainLoop(){
       if(eventRandom < 0.0) break;
     }
     
-    updateSystemTime();        /* »ş´Ö¤Î¥¢¥Ã¥×¥Ç¡¼¥È */
-    eventOccur(selectedEvent); /* ¥¤¥Ù¥ó¥È¤Î¼Â¹Ô */
+    updateSystemTime();        /* æ™‚é–“ã®ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆ */
+    eventOccur(selectedEvent); /* ã‚¤ãƒ™ãƒ³ãƒˆã®å®Ÿè¡Œ */
 
     if(step!=0&&step%displayOutputInterval==0){
       if(!silentFlag){
@@ -617,10 +617,10 @@ void KineticMC::mainLoop(){
 
   }
   /*------------------------*/
-  /*---- ¥ë¡¼¥×¥¨¥ó¥É   ----*/
+  /*---- ãƒ«ãƒ¼ãƒ—ã‚¨ãƒ³ãƒ‰   ----*/
   /*------------------------*/
 
-  /* ½ĞÎÏ¥Õ¥¡¥¤¥ë¥¯¥í¡¼¥º */
+  /* å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«ã‚¯ãƒ­ãƒ¼ã‚º */
   fclose(fp_out);
   fclose(fp_time);
   occurrenceStream.close();
@@ -629,7 +629,7 @@ void KineticMC::mainLoop(){
 }
 
 /*-----------------------------------------------*/
-/*         Î³»Ò¿ô¤ÎÊÑ¹¹                          */
+/*         ç²’å­æ•°ã®å¤‰æ›´                          */
 /*-----------------------------------------------*/
 void KineticMC::changeNumParticle(int step){
   vector<unsigned long> *vectorPointer; 
@@ -641,7 +641,7 @@ void KineticMC::changeNumParticle(int step){
 
   while(iter != keepNumParticleConstVector.end()){
 
-    /* ½ĞÎÏ¥¹¥Æ¥Ã¥×¤òÈ½ÃÇ */
+    /* å‡ºåŠ›ã‚¹ãƒ†ãƒƒãƒ—ã‚’åˆ¤æ–­ */
     if(step % iter->getInterval() == 0){
       unsigned long occupiedNum=0;
       vectorPointer = iter->getSiteVector();
@@ -650,10 +650,10 @@ void KineticMC::changeNumParticle(int step){
       while(site != vectorPointer->end()){
 	if(siteVector[*site].getState()==Site::OCCUPY){
 	  occupiedNum++;
-	  /* ÀêÍ­¥µ¥¤¥È¤ÎÊİÂ¸ */
+	  /* å æœ‰ã‚µã‚¤ãƒˆã®ä¿å­˜ */
 	  occupiedSitesVector.push_back(*site);
 	}else{
-	  /* ÈóÀêÍ­¥µ¥¤¥È¤ÎÊİÂ¸ */
+	  /* éå æœ‰ã‚µã‚¤ãƒˆã®ä¿å­˜ */
 	  unoccupiedSitesVector.push_back(*site);
 	}
 	site++;
@@ -662,10 +662,10 @@ void KineticMC::changeNumParticle(int step){
       unsigned long siteNum;
       long i;
 
-      /* Î³»Ò¿ô¤ÎÀßÄêÃÍ¤È¤Îº¹¤ò·×»» */
+      /* ç²’å­æ•°ã®è¨­å®šå€¤ã¨ã®å·®ã‚’è¨ˆç®— */
       long numAddParticle = iter->getNumParticle()-occupiedNum;
 
-      if(numAddParticle>0){          /* Î³»Ò¿ô¤¬Áı²Ã¤¹¤ë¾ì¹ç */
+      if(numAddParticle>0){          /* ç²’å­æ•°ãŒå¢—åŠ ã™ã‚‹å ´åˆ */
   	for(i=0;i<numAddParticle;i++){
 	  random = (unsigned long)
 	    (getRandomNumber()*unoccupiedSitesVector.size());
@@ -674,7 +674,7 @@ void KineticMC::changeNumParticle(int step){
 	  unoccupiedSitesVector
 	    .erase(unoccupiedSitesVector.begin()+random);
 	} 
-      }else if(numAddParticle<0){    /* Î³»Ò¿ô¤¬¸º¾¯¤¹¤ë¾ì¹ç */
+      }else if(numAddParticle<0){    /* ç²’å­æ•°ãŒæ¸›å°‘ã™ã‚‹å ´åˆ */
   	for(i=0;i<labs(numAddParticle);i++){
 	  random = (unsigned long)
 	    (getRandomNumber()*occupiedSitesVector.size());
@@ -699,7 +699,7 @@ void KineticMC::changeNumParticle(int step){
 }
 
 /*-----------------------------------------------*/
-/*         ¥¤¥Ù¥ó¥È¤Î¥«¥¦¥ó¥È                    */
+/*         ã‚¤ãƒ™ãƒ³ãƒˆã®ã‚«ã‚¦ãƒ³ãƒˆ                    */
 /*-----------------------------------------------*/
 void  KineticMC::countEvent(){
   vector<Particle>::size_type num;
@@ -808,7 +808,7 @@ void  KineticMC::countEvent(){
 }
 
 /*-----------------------------------------------*/
-/*         site¾ğÊó¤Î½ĞÎÏ                        */
+/*         siteæƒ…å ±ã®å‡ºåŠ›                        */
 /*-----------------------------------------------*/
 void KineticMC::printSiteInformation(){
   if(silentFlag) return;
@@ -834,7 +834,7 @@ void KineticMC::printSiteInformation(){
 }
 
 /*-----------------------------------------------*/
-/*         path¾ğÊó¤Î½ĞÎÏ                        */
+/*         pathæƒ…å ±ã®å‡ºåŠ›                        */
 /*-----------------------------------------------*/
 void KineticMC::printRateInformation(){
   if(silentFlag) return;
@@ -861,7 +861,7 @@ void KineticMC::printRateInformation(){
 }
 
 /*-----------------------------------------------*/
-/*         ÆşÎÏ¾ğÊó¤Î½ĞÎÏ                        */
+/*         å…¥åŠ›æƒ…å ±ã®å‡ºåŠ›                        */
 /*-----------------------------------------------*/
 void  KineticMC::printIntervalOutput(int step, FILE *fp_out, FILE *fp_time){
   fprintf (fp_time,"%10d %10.5e %10.5e\n",
@@ -906,7 +906,7 @@ void KineticMC::printOccurrence(int step, ostream &stream){
 
 
 /*-----------------------------------------------*/
-/*         ¥»¥ë¥Ñ¥é¥á¡¼¥¿¤ÎÆÉ¤ß¹ş¤ß            */
+/*         ã‚»ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®èª­ã¿è¾¼ã¿            */
 /*-----------------------------------------------*/
 void  KineticMC::loadCellParameters( const char *line){
   int num;
@@ -920,7 +920,7 @@ void  KineticMC::loadCellParameters( const char *line){
 }
 
 /*-----------------------------------------------*/
-/*         ¥µ¥¤¥È¤ÎºÂÉ¸¤ÎÆÉ¤ß¹ş¤ß                */
+/*         ã‚µã‚¤ãƒˆã®åº§æ¨™ã®èª­ã¿è¾¼ã¿                */
 /*-----------------------------------------------*/
 void  KineticMC::loadCoordination( const char *line){
   struct position3D pos;
@@ -937,7 +937,7 @@ void  KineticMC::loadCoordination( const char *line){
 }
 
 /*-----------------------------------------------*/
-/*         path(site¤Î¥Ú¥¢)¤ÎÆÉ¤ß¹ş¤ß            */
+/*         path(siteã®ãƒšã‚¢)ã®èª­ã¿è¾¼ã¿            */
 /*-----------------------------------------------*/
 void  KineticMC::loadPair( const char *line){
   int i,num,numPair;
@@ -967,7 +967,7 @@ void  KineticMC::loadPair( const char *line){
 }
 
 /*-----------------------------------------------*/
-/*         Î³»Ò¤ÎÄÉ²Ã                            */
+/*         ç²’å­ã®è¿½åŠ                             */
 /*-----------------------------------------------*/
 void KineticMC::addParticle(unsigned long site){
   particleVector.push_back(siteVector[site].getNum());
@@ -976,7 +976,7 @@ void KineticMC::addParticle(unsigned long site){
 
 
 /*-----------------------------------------------*/
-/*         Î³»Ò¤Îºï½ü                            */
+/*         ç²’å­ã®å‰Šé™¤                            */
 /*-----------------------------------------------*/
 void KineticMC::deleteParticle(vector<Particle>::size_type particle){
   siteVector[particleVector[particle].getSite()]
@@ -985,7 +985,7 @@ void KineticMC::deleteParticle(vector<Particle>::size_type particle){
 }
 
 /*-----------------------------------------------*/
-/*         Î³»Ò¤Î°ÜÆ°                            */
+/*         ç²’å­ã®ç§»å‹•                            */
 /*-----------------------------------------------*/
 void KineticMC::moveParticle(vector<Particle>::size_type particle,
 			     unsigned long nextSite){
@@ -996,7 +996,7 @@ void KineticMC::moveParticle(vector<Particle>::size_type particle,
 }
 
 /*-----------------------------------------------*/
-/*         site type¤ÎÄÉ²Ã                       */
+/*         site typeã®è¿½åŠ                        */
 /*-----------------------------------------------*/
 int KineticMC::addSiteType(char *name){
   siteTypeVector.push_back(SiteType(name));
@@ -1008,7 +1008,7 @@ int KineticMC::addSiteType(char *name){
 
 
 /*-----------------------------------------------*/
-/*         site type¤Î¸¡º÷                       */
+/*         site typeã®æ¤œç´¢                       */
 /*-----------------------------------------------*/
 int KineticMC::findSiteType(char *name){
    int i;
@@ -1032,7 +1032,7 @@ int KineticMC::findSiteTypeNoAppend(char *name){
 
 
 /*-----------------------------------------------*/
-/*         pair type¤Î¸¡º÷                       */
+/*         pair typeã®æ¤œç´¢                       */
 /*-----------------------------------------------*/
 int  KineticMC::findPathType(int type1,int type2){
   vector<PathType>::size_type i;
@@ -1054,7 +1054,7 @@ int  KineticMC::findPathType(int type1,int type2){
 
 
 /*-----------------------------------------------*/
-/*         Íğ¿ô¤ÎÈ¯À¸                            */
+/*         ä¹±æ•°ã®ç™ºç”Ÿ                            */
 /*-----------------------------------------------*/
 double KineticMC::getRandomNumber(){
   return (double)rand()/(double)RAND_MAX;

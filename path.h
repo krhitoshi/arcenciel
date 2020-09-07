@@ -9,10 +9,10 @@ using namespace std;
 
 #include "site.h"
 
-/*---- ¥Ñ¥¹¤Î¼ïÎà ----*/
+/*---- ãƒ‘ã‚¹ã®ç¨®é¡ ----*/
 class PathType{
  private:
-  bool          twoSitesFlag;  /* ²òÎ¥µÛÃå,ºÆ·ë¹çÃ¦Î¥ */
+  bool          twoSitesFlag;  /* è§£é›¢å¸ç€,å†çµåˆè„±é›¢ */
   static    int numPathType;
   unsigned long numOccurrence;
   unsigned long lapOccurrence;

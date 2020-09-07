@@ -1,7 +1,7 @@
 #ifndef ARC_FUNCTIONS_H
 #define ARC_FUNCTIONS_H
 
-/*---- ¥×¥í¥È¥¿¥¤¥×Àë¸À ----*/
+/*---- ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€ ----*/
 void fileOpenError(char *fileName);
 void fatalError(char *string);
 

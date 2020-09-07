@@ -7,14 +7,14 @@ using namespace std;
 
 #include "common.h"
 
-/*---- ¥µ¥¤¥È¤Î¼ïÎà ----*/
+/*---- ã‚µã‚¤ãƒˆã®ç¨®é¡ ----*/
 class SiteType{
  private:
-  static int numSiteType;     /* ¥µ¥¤¥È¤Î¼ïÎà¤ÎÁí¿ô */
-  int    num;                     /* ÈÖ¹æ */
-  string name;                 /* Ì¾Á° */
+  static int numSiteType;     /* ã‚µã‚¤ãƒˆã®ç¨®é¡ã®ç·æ•° */
+  int    num;                     /* ç•ªå· */
+  string name;                 /* åå‰ */
  public:
-  static int getNumSiteType(); /* ¥µ¥¤¥È¤Î¼ïÎà¤ÎÁí¿ô */
+  static int getNumSiteType(); /* ã‚µã‚¤ãƒˆã®ç¨®é¡ã®ç·æ•° */
   SiteType(string inName);
   int    getNum();
   void   setName(string value);
@@ -23,22 +23,22 @@ class SiteType{
 
 class PathType;
 
-/*---- ¥µ¥¤¥È¾ğÊó ----*/
+/*---- ã‚µã‚¤ãƒˆæƒ…å ± ----*/
 class Site{
  public:
-  /*---- ¥µ¥¤¥È¤Î¾õÂÖ ----*/
+  /*---- ã‚µã‚¤ãƒˆã®çŠ¶æ…‹ ----*/
   enum enumSiteState {UNOCCUPY, OCCUPY};
  private:
-  static  int numSite;            /* ¥µ¥¤¥È¤ÎÁí¿ô */
+  static  int numSite;            /* ã‚µã‚¤ãƒˆã®ç·æ•° */
 
   vector<unsigned long>     neighborVector;
   vector<int> pathTypeToNeighborVector;
 
-  unsigned long num;              /* ÈÖ¹æ */
-  int           siteType;         /* ¼ïÎà */
-  pos3D         pos;              /* ºÂÉ¸ */
-  enumSiteState state;            /* ¾õÂÖ */
-  int           numNeighbor;    /* ÎÙÀÜ¤¹¤ë¥µ¥¤¥È¤Î¿ô */
+  unsigned long num;              /* ç•ªå· */
+  int           siteType;         /* ç¨®é¡ */
+  pos3D         pos;              /* åº§æ¨™ */
+  enumSiteState state;            /* çŠ¶æ…‹ */
+  int           numNeighbor;    /* éš£æ¥ã™ã‚‹ã‚µã‚¤ãƒˆã®æ•° */
  public:
   static int getNumSite();
   Site(struct position3D inPos, int inType);

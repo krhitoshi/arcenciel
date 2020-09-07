@@ -3,12 +3,12 @@
 
 #include "constants.h"
 
-/*---- ºÂÉ¸ ----*/
+/*---- åº§æ¨™ ----*/
 typedef struct position3D{
   float x,y,z;
 }pos3D;
 
-/*---- ¥»¥ë¥Ñ¥é¥á¡¼¥¿¡¼ ----*/
+/*---- ã‚»ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼ ----*/
 typedef struct cellParameters{
   float a,b,c,alpha,beta,gamma;
 }cellPara;

@@ -30,32 +30,32 @@ class SitePair{
 
 class KineticMC{
  private:
-  int    fileOutputInterval;         /* ¥Õ¥¡¥¤¥ë½ĞÎÏ¥¤¥ó¥¿¡¼¥Ğ¥ë */
-  int    displayOutputInterval;      /* É¸½à½ĞÎÏ¥¤¥ó¥¿¡¼¥Ğ¥ë */
-  int    numStep;                    /* ¥¹¥Æ¥Ã¥×¿ô */
-  double temperature;                /* ²¹ÅÙ */
-  double systemTime, lapSystemTime;  /* »ş´Ö */
+  int    fileOutputInterval;         /* ãƒ•ã‚¡ã‚¤ãƒ«å‡ºåŠ›ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ« */
+  int    displayOutputInterval;      /* æ¨™æº–å‡ºåŠ›ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ« */
+  int    numStep;                    /* ã‚¹ãƒ†ãƒƒãƒ—æ•° */
+  double temperature;                /* æ¸©åº¦ */
+  double systemTime, lapSystemTime;  /* æ™‚é–“ */
   long double sumRate;
 
   bool timePoisson;
-  bool silentFlag;   /* É¸½à½ĞÎÏ¤ÎÍ­Ìµ */
+  bool silentFlag;   /* æ¨™æº–å‡ºåŠ›ã®æœ‰ç„¡ */
 
-  int seedType;      /* Íğ¿ô¤Î¼ï (0¤Ê¤é¤Ğ»ş´Ö¤ò¼ï¤È¤¹¤ë)*/
-  cellPara cell;     /* ¥»¥ë¥Ñ¥é¥á¡¼¥¿ */
+  int seedType;      /* ä¹±æ•°ã®ç¨® (0ãªã‚‰ã°æ™‚é–“ã‚’ç¨®ã¨ã™ã‚‹)*/
+  cellPara cell;     /* ã‚»ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ */
 
   /*------- Vector -------*/
-  /* É¬¤º KineticMC::clear()¤Ç¥á¥â¥ê¤ò²òÊü¤¹¤ë */
+  /* å¿…ãš KineticMC::clear()ã§ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã™ã‚‹ */
 
-  vector<Site>     siteVector;      /* ¥µ¥¤¥È¾ğÊó */
-  vector<SiteType> siteTypeVector;  /* ¥µ¥¤¥È¼ï¾ğÊó */
+  vector<Site>     siteVector;      /* ã‚µã‚¤ãƒˆæƒ…å ± */
+  vector<SiteType> siteTypeVector;  /* ã‚µã‚¤ãƒˆç¨®æƒ…å ± */
 
-  vector<PathType> pathTypeVector;  /* ¥Ñ¥¹¼ï¾ğÊó */
+  vector<PathType> pathTypeVector;  /* ãƒ‘ã‚¹ç¨®æƒ…å ± */
 
-  vector<Particle> particleVector;  /* Î³»Ò¾ğÊó   */
+  vector<Particle> particleVector;  /* ç²’å­æƒ…å ±   */
 
-  vector<Event>    eventVector;     /* ¥¤¥Ù¥ó¥È¾ğÊó */
+  vector<Event>    eventVector;     /* ã‚¤ãƒ™ãƒ³ãƒˆæƒ…å ± */
   
-  /* Î³»Ò¿ô¤ò°ìÄê¤ËÊİ¤Ä¤¿¤á¤Î¾ğÊó */
+  /* ç²’å­æ•°ã‚’ä¸€å®šã«ä¿ã¤ãŸã‚ã®æƒ…å ± */
   vector<KeepNumParticleConst> keepNumParticleConstVector;
     
   vector<unsigned long>    adsorptionSiteVector;
@@ -63,7 +63,7 @@ class KineticMC{
   vector<SitePair> dissosiativeAdsorptionSiteVector;
   vector<SitePair> recombinativeDesorptionSiteVector;
 
-  /* ÆşÎÏ¥Õ¥¡¥¤¥ëÌ¾ */
+  /* å…¥åŠ›ãƒ•ã‚¡ã‚¤ãƒ«å */
   string siteFileName;
   string pathFileName;
   string rateFileName;

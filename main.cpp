@@ -10,24 +10,24 @@ using namespace std;
 #include "kineticMC.h"
 
 /*************************************************/
-/*         ¥á¥¤¥ó                                */
+/*         ãƒ¡ã‚¤ãƒ³                                */
 /*************************************************/
 int main(int argc, char *argv[]){
   string silent  = "-s";
   string version = "-v";
 
-  KineticMC arc; /* KMC·×»»¤ÏÁ´¤Æ class KineticMC¤Ç¹Ô¤¦ */
+  KineticMC arc; /* KMCè¨ˆç®—ã¯å…¨ã¦ class KineticMCã§è¡Œã† */
 
-  /* ¥µ¥¤¥ì¥ó¥È¥â¡¼¥É¤ÎÀßÄê */
+  /* ã‚µã‚¤ãƒ¬ãƒ³ãƒˆãƒ¢ãƒ¼ãƒ‰ã®è¨­å®š */
   if(argc==2 && silent == argv[1]) arc.silentFlagOn();
 
-  /* ¥×¥í¥°¥é¥àÌ¾¤Î½ĞÎÏ */
+  /* ãƒ—ãƒ­ã‚°ãƒ©ãƒ åã®å‡ºåŠ› */
   arc.printProgramName();
 
-  /* ¥Ğ¡¼¥¸¥ç¥ó½ĞÎÏ¤Î¤ß¤Î¾ì¹ç¤Ï½ªÎ» */
+  /* ãƒãƒ¼ã‚¸ãƒ§ãƒ³å‡ºåŠ›ã®ã¿ã®å ´åˆã¯çµ‚äº† */
   if(argc==2 && version == argv[1]) exit(0);
 
- /* KMC·×»»³«»Ï */
+ /* KMCè¨ˆç®—é–‹å§‹ */
   if(!arc.mainProcedure()){
     cout << "Exit!" << endl;
     exit(1);

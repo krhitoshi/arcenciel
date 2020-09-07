@@ -1,7 +1,7 @@
 #ifndef ARC_EVENT_H
 #define ARC_EVENT_H
 
-/*---- ¥¤¥Ù¥ó¥È¾ðÊó ----*/
+/*---- ã‚¤ãƒ™ãƒ³ãƒˆæƒ…å ± ----*/
 #include "site.h"
 #include "path.h"
 #include "particle.h"

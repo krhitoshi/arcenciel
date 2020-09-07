@@ -1,9 +1,9 @@
 #include "site.h"
 
 
-/*---- static ÊÑ¿ô ----*/
-int SiteType::numSiteType;     /* ¥µ¥¤¥È¤Î¼ïÎà¤ÎÁí¿ô */
-int Site::numSite;             /* ¥µ¥¤¥È¤ÎÁí¿ô */
+/*---- static å¤‰æ•° ----*/
+int SiteType::numSiteType;     /* ã‚µã‚¤ãƒˆã®ç¨®é¡ã®ç·æ•° */
+int Site::numSite;             /* ã‚µã‚¤ãƒˆã®ç·æ•° */
 
 SiteType::SiteType(string inName){
   num = numSiteType;
